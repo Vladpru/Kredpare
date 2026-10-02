@@ -1,0 +1,10 @@
+# Editor / design plugin cache
+.impeccable/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store

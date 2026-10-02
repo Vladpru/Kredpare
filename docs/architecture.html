@@ -1,0 +1,386 @@
+<title>Kredpare Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&family=Caveat:wght@600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: Miro-like whiteboard — frames per system zone, colored shapes by role, pan/zoom canvas */
+:root {
+  --board: #F2F3F6; --dot: #C9CED8; --frame: #FFFFFF; --frame-line: #D9DDE5;
+  --ink: #1E2230; --muted: #5D6476; --wire: #737B8F;
+  --service: #E6EEFE; --service-l: #6C8ED8;
+  --step: #FFFFFF; --step-l: #C3C8D3;
+  --llm: #EEE6FF; --llm-l: #977BDF;
+  --det: #DFF5E8; --det-l: #52B07E;
+  --hitl: #FFE2EA; --hitl-l: #DD6A8B;
+  --dec: #FFF3BF; --dec-l: #D3B232;
+  --store: #DDF2F6; --store-l: #45A8BA;
+  --audit: #FFE6DE; --audit-l: #D2532F;
+  --sticky: #FFE76E; --sticky-ink: #3B3210;
+  --chrome: #FFFFFF;
+  --f-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-hand: "Caveat", "Comic Sans MS", cursive;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --board: #111318; --dot: #2B2F38; --frame: #1A1D24; --frame-line: #2F343F;
+  --ink: #E6E9F0; --muted: #9AA2B4; --wire: #8B93A7;
+  --service: #1F2A44; --service-l: #6C8ED8;
+  --step: #22262E; --step-l: #474D5A;
+  --llm: #2C2445; --llm-l: #977BDF;
+  --det: #1B3328; --det-l: #52B07E;
+  --hitl: #44212C; --hitl-l: #DD6A8B;
+  --dec: #403818; --dec-l: #D3B232;
+  --store: #1A3338; --store-l: #45A8BA;
+  --audit: #45241B; --audit-l: #E0663F;
+  --sticky: #5E5114; --sticky-ink: #FFF3BA;
+  --chrome: #1A1D24; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --board: #111318; --dot: #2B2F38; --frame: #1A1D24; --frame-line: #2F343F;
+  --ink: #E6E9F0; --muted: #9AA2B4; --wire: #8B93A7;
+  --service: #1F2A44; --service-l: #6C8ED8;
+  --step: #22262E; --step-l: #474D5A;
+  --llm: #2C2445; --llm-l: #977BDF;
+  --det: #1B3328; --det-l: #52B07E;
+  --hitl: #44212C; --hitl-l: #DD6A8B;
+  --dec: #403818; --dec-l: #D3B232;
+  --store: #1A3338; --store-l: #45A8BA;
+  --audit: #45241B; --audit-l: #E0663F;
+  --sticky: #5E5114; --sticky-ink: #FFF3BA;
+  --chrome: #1A1D24; color-scheme: dark;
+}
+body { background: var(--board); color: var(--ink); font-family: var(--f-body); }
+.wrap { padding-inline: 16px; padding-block: 20px 24px; max-width: 1600px; margin: 0 auto; display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+h1 { font-family: var(--f-display); font-size: 1.9rem; line-height: 1.1; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { margin: 4px 0 0; color: var(--muted); max-width: 65ch; }
+.tools { display: flex; gap: 6px; align-items: center; background: var(--chrome); border: 1px solid var(--frame-line); border-radius: 10px; padding: 4px; }
+.tools button { font: 600 14px var(--f-body); color: var(--ink); background: transparent; border: 0; border-radius: 7px; min-width: 34px; height: 32px; padding: 0 10px; cursor: pointer; }
+.tools button:hover { background: var(--board); }
+.tools button:focus-visible { outline: 2px solid var(--service-l); outline-offset: 1px; }
+#zoomPct { font: 500 12px var(--f-mono); color: var(--muted); min-width: 48px; text-align: center; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid; display: inline-block; }
+.board { position: relative; height: clamp(440px, 80vh, 1000px); border: 1px solid var(--frame-line); border-radius: 12px; overflow: hidden;
+  background-color: var(--board); background-image: radial-gradient(var(--dot) 1px, transparent 1.2px); background-size: 22px 22px; }
+.board svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; }
+.board svg.dragging { cursor: grabbing; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); background: var(--chrome); border: 1px solid var(--frame-line); border-radius: 8px; padding: 4px 8px; pointer-events: none; }
+/* SVG classes */
+.f-rect { fill: var(--frame); stroke: var(--frame-line); stroke-width: 1.2; }
+.f-title { font: 700 14px var(--f-body); fill: var(--muted); letter-spacing: 0.02em; }
+.n-title { font: 700 13.5px var(--f-body); fill: var(--ink); }
+.n-line { font: 500 11.5px var(--f-body); fill: var(--muted); }
+.lane { font: 700 11.5px var(--f-body); fill: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.sep { stroke: var(--frame-line); stroke-width: 1.2; stroke-dasharray: 6 6; }
+.wire { fill: none; stroke: var(--wire); stroke-width: 1.8; stroke-linejoin: round; }
+.wire.dash { stroke-dasharray: 6 5; }
+.arrowhead { fill: var(--wire); }
+.lbl-bg { fill: var(--chrome); stroke: var(--frame-line); stroke-width: 1; }
+.lbl { font: 600 11px var(--f-body); fill: var(--ink); }
+.tag-bg { fill: var(--audit-l); }
+.tag { font: 700 10px var(--f-mono); fill: #FFFFFF; }
+.chip { fill: var(--det); stroke: var(--det-l); stroke-width: 1.3; }
+.chip-t { font: 500 11.5px var(--f-mono); fill: var(--ink); }
+.box-t { font: 700 12px var(--f-body); fill: var(--ink); }
+.sticky { fill: var(--sticky); }
+.sticky-t { font: 600 23px var(--f-hand); fill: var(--sticky-ink); }
+.sticky-shadow { fill: #000000; opacity: 0.08; }
+@media (prefers-reduced-motion: no-preference) { .tools button { transition: background .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Kredpare</h1>
+      <p class="sub">Архітектура v1: щоденна звірка проданих кредитів між lending-платформою та партнерами. Celery + Redis, LangGraph-агент, Postgres з append-only audit.</p>
+    </div>
+    <div class="tools" role="toolbar" aria-label="Масштаб дошки">
+      <button id="zOut" aria-label="Зменшити">−</button>
+      <span id="zoomPct">100%</span>
+      <button id="zIn" aria-label="Збільшити">+</button>
+      <button id="zFit">Fit</button>
+    </div>
+  </header>
+  <div class="legend" aria-label="Легенда">
+    <span><i style="background:var(--service);border-color:var(--service-l)"></i>Сервіс</span>
+    <span><i style="background:var(--step);border-color:var(--step-l)"></i>Крок пайплайну</span>
+    <span><i style="background:var(--det);border-color:var(--det-l)"></i>Детермінований код</span>
+    <span><i style="background:var(--llm);border-color:var(--llm-l)"></i>LLM-крок</span>
+    <span><i style="background:var(--hitl);border-color:var(--hitl-l)"></i>Human-in-the-loop</span>
+    <span><i style="background:var(--dec);border-color:var(--dec-l)"></i>Рішення</span>
+    <span><i style="background:var(--store);border-color:var(--store-l)"></i>Дані</span>
+    <span><i style="background:var(--audit);border-color:var(--audit-l)"></i>Audit</span>
+  </div>
+  <div class="board" id="board">
+    <svg id="svg" viewBox="0 0 1820 1600" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Діаграма архітектури Kredpare"></svg>
+    <div class="hint">Тягни — рух · колесо або pinch — масштаб</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 1820, H = 1600, NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('svg');
+  const mk = (tag, attrs = {}, parent = svg, text) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    parent.appendChild(e);
+    return e;
+  };
+
+  const defs = mk('defs');
+  const m = mk('marker', { id: 'ah', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+  mk('path', { d: 'M0,0 L10,5 L0,10 z', class: 'arrowhead' }, m);
+
+  const gFrames = mk('g'), gWires = mk('g'), gNodes = mk('g'), gLabels = mk('g');
+
+  // Frames
+  const frames = [
+    [40, 60, 380, 210, 'Client'],
+    [500, 60, 380, 210, 'API'],
+    [960, 60, 380, 210, 'Object storage'],
+    [1420, 60, 360, 400, 'External services'],
+    [40, 330, 380, 190, 'Scheduler'],
+    [500, 330, 380, 190, 'Queue · cache'],
+    [40, 580, 1300, 970, 'Celery workers · tasks: ingest_file · ingest_contract · investigate_break'],
+    [1420, 520, 360, 780, 'Postgres · Neon'],
+  ];
+  for (const [x, y, w, h, t] of frames) {
+    mk('rect', { x, y, width: w, height: h, rx: 12, class: 'f-rect' }, gFrames);
+    mk('text', { x: x + 2, y: y - 10, class: 'f-title' }, gFrames, t);
+  }
+
+  // Lanes inside workers
+  mk('line', { x1: 60, y1: 872, x2: 1320, y2: 872, class: 'sep' }, gFrames);
+  mk('line', { x1: 60, y1: 1018, x2: 1320, y2: 1018, class: 'sep' }, gFrames);
+  mk('text', { x: 70, y: 640, class: 'lane' }, gFrames, 'A · Loan file pipeline');
+  mk('text', { x: 70, y: 900, class: 'lane' }, gFrames, 'B · Contract pipeline');
+  mk('text', { x: 70, y: 1040, class: 'lane' }, gFrames, 'C · LangGraph agent — керування кейсом');
+
+  // Nodes: [x, y, w, h, kind, title, lines[], tag]
+  const nodes = [
+    [70, 100, 320, 150, 'service', 'Next.js web', ['TanStack Table: список breaks', 'Investigation panel (live SSE)', 'HITL: approve / reject']],
+    [530, 100, 320, 150, 'service', 'FastAPI', ['upload: CSV, contract PDF', 'SSE: кроки агента наживо', 'approve endpoints · reads Postgres'], 'audit'],
+    [990, 100, 320, 150, 'store', 'S3 · MinIO / R2', ['raw CSV від партнерів', 'договори + amendments (PDF)', 'immutable · sha256 checksum']],
+    [1450, 100, 300, 150, 'service', 'LLM API', ['Sonnet 5.5 — розслідування', 'Haiku 4.5 — mapping, класифікація', 'routing за складністю задачі']],
+    [1450, 280, 300, 160, 'service', 'LangSmith', ['traces · версії промптів', 'datasets + evals (CI, nightly)', 'PII маскує Presidio до відправки']],
+    [70, 370, 320, 130, 'service', 'Celery Beat', ['щодня 06:00 EST: recon по партнерах', 'nightly evals']],
+    [530, 370, 320, 130, 'service', 'Redis', ['Celery broker + result backend', 'semantic cache · rate limits']],
+
+    // Lane A
+    [70, 670, 130, 64, 'step', 'raw CSV', ['from S3']],
+    [225, 670, 130, 64, 'det', 'header hash', ['sha256(columns)']],
+    [540, 670, 130, 64, 'det', 'apply mapping', ['config vN']],
+    [695, 670, 130, 64, 'det', 'Polars', ['normalize']],
+    [850, 670, 130, 64, 'det', 'Pandera', ['validate schema']],
+    [1005, 670, 130, 64, 'det', 'DuckDB', ['matching engine']],
+    [1160, 670, 140, 64, 'step', 'breaks', ['typed + amounts']],
+    [375, 780, 130, 64, 'llm', 'LLM proposes', ['mapping · Haiku']],
+    [540, 780, 130, 64, 'hitl', 'HITL #1', ['approve mapping'], 'audit'],
+
+    // Lane B
+    [70, 920, 150, 64, 'step', 'contract PDF', ['+ amendments']],
+    [255, 920, 150, 64, 'step', 'Docling', ['tables, sections']],
+    [440, 920, 200, 64, 'step', 'chunk by section', ['partner · effective_date']],
+    [675, 920, 150, 64, 'llm', 'embeddings', ['Voyage / OpenAI']],
+    [860, 920, 170, 64, 'store', 'hybrid index', ['pgvector + tsvector']],
+
+    // Lane C
+    [90, 1080, 140, 64, 'step', 'fan-out', ['Send() per break']],
+    [290, 1080, 160, 64, 'llm', 'investigator', ['LangGraph · Sonnet']],
+    [520, 1190, 160, 64, 'hitl', 'escalate', ['ops queue · ручний розбір'], 'pause'],
+    [290, 1290, 140, 64, 'llm', 'root cause', ['+ contract citation']],
+    [460, 1290, 140, 64, 'step', 'proposal', ['correction / email']],
+    [630, 1290, 140, 64, 'hitl', 'HITL #2', ['approve / reject'], 'pause'],
+    [870, 1290, 120, 64, 'det', 'apply', ['correction']],
+    [1020, 1290, 130, 64, 'store', 'Store', ['пам\u2019ять рішення']],
+    [1180, 1290, 120, 64, 'det', 'resolved', ['case closed'], 'audit'],
+    [670, 1420, 140, 64, 'step', 'email', ['чернетка партнеру']],
+    [850, 1420, 120, 64, 'det', 'send', ['після approve']],
+    [1010, 1420, 160, 64, 'hitl', 'wait_reply', ['чекає відповідь · дні'], 'pause'],
+
+    // Postgres
+    [1450, 560, 300, 100, 'store', 'partners · mapping_configs', ['version · header_hash', 'proposed → approved → superseded']],
+    [1450, 680, 300, 92, 'store', 'loans · breaks · proposals', ['гроші як Decimal, ніколи float']],
+    [1450, 792, 300, 100, 'store', 'LangGraph state', ['checkpoints · PostgresSaver', 'Store: пам’ять вирішених breaks']],
+    [1450, 910, 300, 100, 'store', 'contract_chunks', ['pgvector + tsvector → RRF', 'partner · effective_date']],
+    [1450, 1030, 300, 140, 'audit', 'audit_events', ['APPEND-ONLY', 'trigger блокує UPDATE / DELETE', 'prev_hash → hash chain', 'model · prompt_version · trace_id']],
+  ];
+
+  const drawNode = ([x, y, w, h, kind, title, lines, tag]) => {
+    const thick = kind === 'audit' ? 2.4 : 1.5;
+    mk('rect', { x, y, width: w, height: h, rx: 10, fill: `var(--${kind})`, stroke: `var(--${kind}-l)`, 'stroke-width': thick }, gNodes);
+    const total = 17 + lines.length * 15.5;
+    let ty = y + h / 2 - total / 2 + 13;
+    mk('text', { x: x + w / 2, y: ty, 'text-anchor': 'middle', class: 'n-title' }, gNodes, title);
+    for (const l of lines) { ty += 15.5; mk('text', { x: x + w / 2, y: ty + 1, 'text-anchor': 'middle', class: 'n-line' }, gNodes, l); }
+    if (tag) {
+      const tw = tag === 'pause' ? 92 : 64, tt = tag === 'pause' ? '⏸ interrupt' : '→ audit';
+      mk('rect', { x: x + w - tw + 4, y: y - 9, width: tw, height: 18, rx: 9, class: 'tag-bg', style: tag === 'pause' ? 'fill:var(--hitl-l)' : '' }, gNodes);
+      mk('text', { x: x + w + 4 - tw / 2, y: y + 4, 'text-anchor': 'middle', class: 'tag' }, gNodes, tt);
+    }
+  };
+  nodes.forEach(drawNode);
+
+  // Decision diamond
+  mk('polygon', { points: '440,662 500,702 440,742 380,702', fill: 'var(--dec)', stroke: 'var(--dec-l)', 'stroke-width': 1.5 }, gNodes);
+  mk('text', { x: 440, y: 699, 'text-anchor': 'middle', class: 'n-line', style: 'fill:var(--ink);font-weight:700' }, gNodes, 'hash');
+  mk('text', { x: 440, y: 713, 'text-anchor': 'middle', class: 'n-line', style: 'fill:var(--ink);font-weight:700' }, gNodes, 'known?');
+
+  // Decision: found root cause?
+  mk('polygon', { points: '370,1187 432,1222 370,1257 308,1222', fill: 'var(--dec)', stroke: 'var(--dec-l)', 'stroke-width': 1.5 }, gNodes);
+  mk('text', { x: 370, y: 1226, 'text-anchor': 'middle', class: 'n-line', style: 'fill:var(--ink);font-weight:700' }, gNodes, 'знайшов?');
+
+  // Deterministic tools box
+  mk('rect', { x: 510, y: 1060, width: 790, height: 112, rx: 10, fill: 'none', stroke: 'var(--det-l)', 'stroke-width': 1.5, 'stroke-dasharray': '7 5' }, gNodes);
+  mk('text', { x: 526, y: 1081, class: 'box-t' }, gNodes, 'Deterministic tools — агент викликає, гроші не рахує');
+  const chips = [
+    [526, 1091, 'calc_accrued_interest'], [717, 1091, 'recompute_funding'], [880, 1091, 'find_similar_breaks'],
+    [526, 1132, 'query_loans · read-only SQL'], [753, 1132, 'search_contract · hybrid + rerank'],
+  ];
+  for (const [x, y, t] of chips) {
+    const w = t.length * 7.1 + 22;
+    mk('rect', { x, y, width: w, height: 32, rx: 16, class: 'chip' }, gNodes);
+    mk('text', { x: x + w / 2, y: y + 20, 'text-anchor': 'middle', class: 'chip-t' }, gNodes, t);
+  }
+
+  // LangGraph features sticky
+  const lg = mk('g', { transform: 'rotate(1.2 1600 1450)' }, gNodes);
+  mk('rect', { x: 1436, y: 1336, width: 344, height: 214, rx: 3, class: 'sticky-shadow' }, lg);
+  mk('rect', { x: 1430, y: 1330, width: 344, height: 214, rx: 3, class: 'sticky', style: 'fill:var(--llm)' }, lg);
+  ['LangGraph у секції C:', '⏸ interrupt() — escalate, HITL #2, wait_reply', 'Command(goto) — повернення до investigator',
+   'Send() — fan-out по breaks', 'PostgresSaver — пауза на дні', 'Store — пам\u2019ять вирішених кейсів']
+    .forEach((t, i) => mk('text', { x: 1450, y: 1364 + i * 32, class: i ? 'n-line' : 'box-t', style: i ? 'fill:var(--ink);font-size:12.5px' : 'font-size:14px' }, lg, t));
+
+  // Sticky note
+  const sg = mk('g', { transform: 'rotate(-1.6 1150 425)' }, gNodes);
+  mk('rect', { x: 974, y: 346, width: 360, height: 168, rx: 3, class: 'sticky-shadow' }, sg);
+  mk('rect', { x: 968, y: 340, width: 360, height: 168, rx: 3, class: 'sticky' }, sg);
+  ['LLM — там, де неоднозначність:', 'формати файлів, договори.', 'Код — там, де гроші:', 'суми, matching, перерахунки.']
+    .forEach((t, i) => mk('text', { x: 990, y: 382 + i * 34, class: 'sticky-t' }, sg, t));
+
+  // Wires: [points, label, labelPos, opts]
+  const wires = [
+    [[[390, 175], [530, 175]], 'HTTP + SSE'],
+    [[[850, 175], [990, 175]], 'upload'],
+    [[[690, 250], [690, 370]], 'enqueue task'],
+    [[[390, 435], [530, 435]], 'schedule'],
+    [[[690, 500], [690, 586]], 'consume'],
+    [[[1340, 640], [1390, 640], [1390, 175], [1450, 175]], 'LLM calls', [1390, 470]],
+    [[[1390, 360], [1450, 360]], 'traces', [1420, 345]],
+    [[[1340, 726], [1450, 726]], 'read / write', [1388, 712], { both: true }],
+    // Lane A
+    [[[200, 702], [225, 702]]],
+    [[[355, 702], [380, 702]]],
+    [[[500, 702], [540, 702]], 'yes', [520, 690]],
+    [[[670, 702], [695, 702]]],
+    [[[825, 702], [850, 702]]],
+    [[[980, 702], [1005, 702]]],
+    [[[1135, 702], [1160, 702]]],
+    [[[440, 742], [440, 780]], 'no', [462, 762]],
+    [[[505, 812], [540, 812]]],
+    [[[605, 780], [605, 734]], 'v+1 approved', [652, 757]],
+    // Lane B
+    [[[220, 952], [255, 952]]],
+    [[[405, 952], [440, 952]]],
+    [[[640, 952], [675, 952]]],
+    [[[825, 952], [860, 952]]],
+    [[[1030, 952], [1450, 952]], 'write chunks', [1380, 940]],
+    // breaks → fan-out
+    [[[1230, 734], [1230, 1052], [160, 1052], [160, 1080]], 'кожен break', [1262, 820]],
+    // Lane C
+    [[[230, 1112], [290, 1112]]],
+    [[[450, 1112], [510, 1112]], null, null, { both: true }],
+    [[[370, 1144], [370, 1187]]],
+    [[[432, 1222], [520, 1222]], 'ні · N спроб', [476, 1206]],
+    [[[370, 1257], [370, 1290]], 'так', [392, 1274]],
+    [[[430, 1322], [460, 1322]]],
+    [[[600, 1322], [630, 1322]]],
+    [[[770, 1322], [870, 1322]], 'correction', [820, 1306]],
+    [[[990, 1322], [1020, 1322]]],
+    [[[1150, 1322], [1180, 1322]]],
+    [[[740, 1354], [740, 1420]], 'email', [764, 1392]],
+    [[[810, 1452], [850, 1452]]],
+    [[[970, 1452], [1010, 1452]]],
+    [[[1170, 1452], [1240, 1452], [1240, 1354]], 'підтвердили', [1240, 1400]],
+    // loop-backs → investigator (Command goto)
+    [[[660, 1354], [660, 1378], [262, 1378], [262, 1132], [290, 1132]], 'reject + коментар', [470, 1378], { dash: true }],
+    [[[1090, 1484], [1090, 1515], [262, 1515], [262, 1378]], 'заперечили', [680, 1515], { dash: true, noHead: true }],
+  ];
+  for (const [pts, label, lp, opts = {}] of wires) {
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ',' + p[1]).join(' ');
+    const a = { d, class: 'wire' + (opts.dash ? ' dash' : '') };
+    if (!opts.noHead) a['marker-end'] = 'url(#ah)';
+    if (opts.both) a['marker-start'] = 'url(#ah)';
+    mk('path', a, gWires);
+    if (label) {
+      const [lx, ly] = lp || [(pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2];
+      const w = label.length * 6.4 + 14;
+      mk('rect', { x: lx - w / 2, y: ly - 10, width: w, height: 20, rx: 10, class: 'lbl-bg' }, gLabels);
+      mk('text', { x: lx, y: ly + 4, 'text-anchor': 'middle', class: 'lbl' }, gLabels, label);
+    }
+  }
+
+  // Pan / zoom
+  let vb = { x: 0, y: 0, w: W, h: H };
+  const pct = document.getElementById('zoomPct');
+  const apply = () => {
+    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    pct.textContent = Math.round((W / vb.w) * 100) + '%';
+  };
+  const toSvg = (cx, cy) => {
+    const p = svg.createSVGPoint(); p.x = cx; p.y = cy;
+    return p.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  const zoomAt = (f, px, py) => {
+    const nw = Math.min(W * 1.6, Math.max(W / 7, vb.w * f));
+    const k = nw / vb.w;
+    vb.x = px - (px - vb.x) * k; vb.y = py - (py - vb.y) * k;
+    vb.w = nw; vb.h = vb.h * k; apply();
+  };
+  const center = () => [vb.x + vb.w / 2, vb.y + vb.h / 2];
+  document.getElementById('zIn').onclick = () => zoomAt(0.8, ...center());
+  document.getElementById('zOut').onclick = () => zoomAt(1.25, ...center());
+  document.getElementById('zFit').onclick = () => { vb = { x: 0, y: 0, w: W, h: H }; apply(); };
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const p = toSvg(e.clientX, e.clientY);
+    zoomAt(Math.exp(e.deltaY * 0.0015), p.x, p.y);
+  }, { passive: false });
+
+  const ptrs = new Map();
+  let lastDist = 0;
+  const scale = () => { const r = svg.getBoundingClientRect(); return Math.max(vb.w / r.width, vb.h / r.height); };
+  svg.addEventListener('pointerdown', e => {
+    svg.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    svg.classList.add('dragging');
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; lastDist = Math.hypot(a.x - b.x, a.y - b.y); }
+  });
+  svg.addEventListener('pointermove', e => {
+    const prev = ptrs.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    if (ptrs.size === 1) {
+      const s = scale();
+      vb.x -= (cur.x - prev.x) * s; vb.y -= (cur.y - prev.y) * s; apply();
+    }
+    ptrs.set(e.pointerId, cur);
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      if (lastDist) { const mid = toSvg((a.x + b.x) / 2, (a.y + b.y) / 2); zoomAt(lastDist / dist, mid.x, mid.y); }
+      lastDist = dist;
+    }
+  });
+  const end = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) lastDist = 0; if (!ptrs.size) svg.classList.remove('dragging'); };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', end);
+  apply();
+})();
+</script>

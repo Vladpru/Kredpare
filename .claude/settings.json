@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest *)",
+      "Bash(make *)",
+      "Bash(docker compose *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path'); case \"$f\" in *.py) ;; *) exit 0 ;; esac; [ -f \"$CLAUDE_PROJECT_DIR/backend/pyproject.toml\" ] || exit 0; uv run --quiet --project \"$CLAUDE_PROJECT_DIR/backend\" ruff format --quiet \"$f\" 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "ruff format"
+          }
+        ]
+      }
+    ]
+  }
+}
