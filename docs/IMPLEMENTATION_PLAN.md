@@ -396,5 +396,3 @@ Plus 1–2 weeks of buffer.
 | v3      | **Payments domain:** Stripe settlement ↔ bank statement as `domains/payments/`          | The core is generic. Criterion: minimal diff in `core/`, visible in the PR |
 | v4      | Multi-tenant                                                                            | Isolation, ingestion at scale                                              |
 | v5      | Fine-tune a small model on HITL corrections                                             | Data flywheel, lower cost                                                  |
-
-

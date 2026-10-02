@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # python is added in #3, javascript-typescript in #8.
-        language: [actions]
+        # javascript-typescript is added in #8.
+        language: [actions, python]
     steps:
       - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
