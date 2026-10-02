@@ -1,6 +1,5 @@
 version: 2
 updates:
-  # npm (web) entry is added with web/ in #8.
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -9,6 +8,12 @@ updates:
       prefix: ci
   - package-ecosystem: uv
     directory: /backend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+  - package-ecosystem: npm
+    directory: /web
     schedule:
       interval: weekly
     commit-message:
