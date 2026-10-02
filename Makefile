@@ -1,6 +1,6 @@
 .PHONY: up down check test
 
-BACKEND := uv run --project backend --directory backend
+BACKEND := uv run --directory backend
 
 up:
 	docker compose up -d --wait

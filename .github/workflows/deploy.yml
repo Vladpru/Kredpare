@@ -1,0 +1,15 @@
+name: Deploy
+
+# Stub. Enabled in Iteration 10: on push to main after green CI, build images
+# to GHCR, run Alembic migrations, deploy api / worker / beat to Fly.io.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy is not enabled yet (Iteration 10)."

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: kredpare
+          POSTGRES_PASSWORD: kredpare
+          POSTGRES_DB: kredpare
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U kredpare -d kredpare"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0  # no floating major tags after v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - name: Install dependencies
+        run: uv sync --locked --project backend
+      - name: Lint, types, import contracts
+        run: make check
+      - name: Tests with coverage
+        run: >-
+          uv run --directory backend
+          pytest --cov=kredpare --cov-report=term-missing --cov-report=xml
