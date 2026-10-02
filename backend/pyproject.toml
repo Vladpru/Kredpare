@@ -4,7 +4,12 @@ version = "0.0.0"
 description = "Reconciliation of files exchanged with counterparties, with a rules -> workflow -> agent cascade for breaks."
 license = "MIT"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "alembic>=1.20.0",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]
@@ -35,6 +40,10 @@ select = [
     "SIM",  # flake8-simplify
     "RUF",  # ruff-specific
 ]
+
+[tool.ruff.lint.isort]
+# The local alembic/ migrations folder would otherwise make ruff treat it as first-party.
+known-third-party = ["alembic"]
 
 [tool.pyright]
 include = ["src", "tests"]

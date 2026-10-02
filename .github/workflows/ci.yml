@@ -15,6 +15,9 @@ concurrency:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      # Throwaway service-container credentials, same as docker-compose.yml.
+      DATABASE_URL: postgresql+psycopg://kredpare:kredpare@localhost:5433/kredpare
     services:
       postgres:
         image: pgvector/pgvector:pg17
@@ -48,6 +51,8 @@ jobs:
         run: uv sync --locked --project backend
       - name: Lint, types, import contracts
         run: make check
+      - name: Migrations on a fresh database
+        run: uv run --directory backend alembic upgrade head
       - name: Tests with coverage
         run: >-
           uv run --directory backend
