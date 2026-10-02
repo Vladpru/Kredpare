@@ -65,9 +65,9 @@ This plan is executed together with Claude Code. Before starting **every** itera
 
 - [ ] Anthropic API account, a **monthly spend limit**, a separate workspace for the project. Key stored in a password manager.
 - [ ] LangSmith account, projects `kredpare-dev` and `kredpare-ci`.
-- [ ] Embeddings provider (Voyage or OpenAI) and reranker (Cohere): accounts, spend limits.
+- [ ] Embeddings provider (Google AI Studio, chosen 2026-10-02) and reranker (Cohere): accounts, spend limits.
 - [ ] GitHub: 2FA, `gh auth login`, an empty public repo `kredpare` created.
-- [ ] Installed: `uv`, Node LTS + `pnpm`, OrbStack or Docker, `pre-commit`, `direnv`, `duckdb` CLI.
+- [ ] Installed: `uv`, Node + `pnpm` (v26 accepted 2026-10-02, not LTS), OrbStack or Docker, `pre-commit`, `direnv`, `duckdb` CLI.
 - [ ] Editor extensions: Python, Ruff, Even Better TOML, Docker, Tailwind CSS IntelliSense.
 - [ ] Claude Code: Context7 authorized via `/mcp` in a `claude` terminal (or `mcpdoc` connected with the LangGraph docs).
 - [ ] LangGraph docs read: persistence, `interrupt`, `Command`, `Send`, Store.
@@ -211,7 +211,7 @@ The public GitHub repository is part of the portfolio. Recruiters and engineers 
 
 ## Iteration 4 — RAG over agreements (weeks 6–7)
 
-**Before starting (Claude asks):** `.env` has embeddings and reranker keys set. The user has approved the structure of the synthetic agreements (sections, amendments, traps).
+**Before starting (Claude asks):** `.env` has embeddings (Google AI Studio) and reranker (Cohere) keys set. The user has approved the structure of the synthetic agreements (sections, amendments, traps).
 
 **Goal:** find the rule in force, with a citation.
 
