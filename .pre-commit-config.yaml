@@ -5,6 +5,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: ^web/pnpm-lock\.yaml$  # pnpm 12 writes a multi-document lockfile
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
