@@ -6,9 +6,13 @@ license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "alembic>=1.20.0",
+    "boto3>=1.43.108",
+    "fastapi>=0.142.2",
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
+    "redis>=8.1.0",
     "sqlalchemy>=2.0",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [build-system]
@@ -17,6 +21,8 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "boto3-stubs[s3]>=1.43.107",
+    "httpx2>=2.13.1",
     "import-linter>=2.15",
     "pre-commit>=4.6.2",
     "pyright>=1.1.414",
