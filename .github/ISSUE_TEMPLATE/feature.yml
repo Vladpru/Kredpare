@@ -1,0 +1,26 @@
+name: Feature
+description: A task inside an iteration
+labels: []
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What this task achieves, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable, testable checks.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Plan section, ADRs, domain docs.
+      placeholder: "`docs/IMPLEMENTATION_PLAN.md` — Iteration N"
