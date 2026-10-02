@@ -1,4 +1,4 @@
-.PHONY: up down check test
+.PHONY: up down check test api
 
 BACKEND := uv run --directory backend
 
@@ -17,3 +17,6 @@ check:
 
 test:
 	$(BACKEND) pytest
+
+api:
+	$(BACKEND) uvicorn kredpare.core.api.app:app --reload
