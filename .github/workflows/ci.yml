@@ -50,5 +50,5 @@ jobs:
         run: make check
       - name: Tests with coverage
         run: >-
-          uv run --project backend --directory backend
+          uv run --directory backend
           pytest --cov=kredpare --cov-report=term-missing --cov-report=xml
