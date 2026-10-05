@@ -6,28 +6,12 @@ from datetime import date
 from kredpare.domains.lending.pricing import DayCount, Rounding
 
 from kredpare_datagen.agreements import BRACKWATER, QUILLMONT, ROUNDING_CITATION, TESSALINE
-from kredpare_datagen.generate import Batch, Dataset, generate_clean, quote
+from kredpare_datagen.generate import Dataset, generate_clean, quote
 from kredpare_datagen.ground_truth import GroundTruth
 from kredpare_datagen.inject import inject
+from tests.helpers import differences
 
-COMPARED = ("upb", "price_pct", "accrued_interest", "purchase_price", "settlement_date")
 Injected = tuple[Dataset, list[GroundTruth]]
-
-
-def _differences(batch: Batch) -> dict[str, tuple[str, ...]]:
-    """Per loan of the seller file: compared fields that differ from its confirmation row."""
-    if batch.confirmation is None:
-        return {}
-    confirmed = {row.loan_id: row for row in batch.confirmation}
-    result: dict[str, tuple[str, ...]] = {}
-    for loan in batch.funded:
-        row = confirmed.get(loan.loan_id)
-        if row is None:
-            continue
-        fields = tuple(f for f in COMPARED if getattr(loan, f) != getattr(row, f))
-        if fields:
-            result[loan.loan_id] = fields
-    return result
 
 
 def _by_cause(truth: list[GroundTruth]) -> dict[str, list[GroundTruth]]:
@@ -68,7 +52,7 @@ def test_every_amount_and_date_difference_is_labeled_and_nothing_else(injected: 
     actual = {
         (batch.batch_id, loan_id): fields
         for batch in dataset.batches
-        for loan_id, fields in _differences(batch).items()
+        for loan_id, fields in differences(batch).items()
     }
 
     assert actual == labeled

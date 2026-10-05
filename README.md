@@ -92,6 +92,7 @@ Stop the containers with `make down`.
 ```bash
 make check   # ruff, ruff format --check, pyright, import-linter
 make test    # pytest (needs `make up` and .env)
+uv run kredpare-datagen --seed 42 --days 30   # synthetic files + ground_truth.jsonl in data/generated/
 uv run --directory backend pytest tests/test_health.py::test_health_ok_when_all_dependencies_reachable   # one test
 (cd web && pnpm lint && pnpm typecheck && pnpm build)
 ```
