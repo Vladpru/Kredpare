@@ -5,7 +5,6 @@ description = "Synthetic lending files, break injector, and ground truth for Kre
 license = "MIT"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "holidays>=0.105",
     "kredpare",
 ]
 

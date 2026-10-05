@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 
+from kredpare.domains.lending.calendar import add_business_days
 from kredpare.domains.lending.pricing import DayCount, Rounding, accrued_interest, purchase_price
 from kredpare.domains.lending.schemas import (
     FundedLoan,
@@ -21,7 +22,6 @@ from kredpare_datagen.agreements import (
     settlements,
     terms_in_force,
 )
-from kredpare_datagen.calendar import add_business_days
 
 DEALERS = tuple(f"D-{n:04d}" for n in range(101, 109))
 _TIER_WEIGHTS = (30, 35, 25, 10)
