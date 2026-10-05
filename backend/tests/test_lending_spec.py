@@ -46,9 +46,19 @@ def test_lending_match_declarations_follow_the_canonical_schema() -> None:
     )
 
 
-def test_lending_has_no_rules_or_tools_yet() -> None:
-    assert LENDING.rules == ()
-    assert LENDING.tools == ()
+def test_lending_registers_one_rule_per_simple_cause_and_the_query_tool() -> None:
+    assert [r.name for r in LENDING.rules] == [
+        "loan_not_confirmed",
+        "loan_not_offered",
+        "duplicate_row",
+        "confirmation_overdue",
+        "settlement_date_roll",
+        "rounding_difference",
+        "accrual_start_alternative",
+    ]
+    assert [t.name for t in LENDING.tools] == ["query_records"]
+    declared = {b.name for b in LENDING.break_types}
+    assert all(set(r.break_types) <= declared for r in LENDING.rules)
 
 
 _CORE = Path(__file__).resolve().parents[1] / "src" / "kredpare" / "core"
