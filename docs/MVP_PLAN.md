@@ -17,9 +17,9 @@ If the hypothesis holds, the expensive parts (RAG, case lifecycle, agent, deploy
 - Lending pricing math: day counts, accrued interest, purchase price.
 - `kredpare-datagen`: 3 buyers + servicer, each party's file format, 12 injected causes, `ground_truth.jsonl`, `manifest.jsonl`, property tests.
 
-## Success criteria (decide before M1, check in M4)
+## Success criteria (fixed before M1, checked in M4)
 
-Targets are proposals. The user confirms or changes them in M1's "Before starting" block. They are recorded in `docs/evals.md` and are not changed after measurements start.
+Confirmed by the user on 2026-10-05 and recorded in `docs/evals.md` (issue #43). They are not changed after measurements start.
 
 | # | Criterion | Target |
 |---|---|---|
@@ -67,7 +67,7 @@ Claude never asks for a key to be pasted into the chat. Each step is one milesto
 
 ## M1 — Ingest and matching (weeks 1–2)
 
-**Before starting (Claude asks):** The user confirms the success criteria table above (or changes the targets). Claude checks that `make up` starts postgres and that `alembic upgrade head` runs.
+**Before starting (Claude asks):** The success criteria are fixed (done 2026-10-05). Claude checks that `make up` starts postgres and that `alembic upgrade head` runs.
 
 **Goal:** from a `kredpare-datagen` output directory to a list of typed breaks in Postgres, with no LLM.
 

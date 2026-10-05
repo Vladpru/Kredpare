@@ -9,9 +9,26 @@ Rules for every table:
 - Cost is USD per item, from LangSmith traces. Latency is p50 / p95 in seconds.
 - Targets come from `MVP_PLAN.md` (success criteria) and, after the MVP, `POST_MVP_PLAN.md`. A missed target is recorded as-is, with a note.
 
+## MVP success criteria
+
+Fixed on 2026-10-05, before any measurement (`docs/MVP_PLAN.md`, issue #43). Targets are not edited after M1 starts. "Measured" is filled in M4 for the verdict.
+
+| # | Criterion | Target | Measured | Met |
+|---|---|---|---|---|
+| S1 | Break detection precision and recall, every break type | ≥ 0.98 | | |
+| S2 | Share of simple breaks closed by rules | ≥ 0.90 | | |
+| S3 | Rules claiming a medium or hard break | 0 | | |
+| S4 | Medium breaks: workflow root cause accuracy | ≥ 0.80 | | |
+| S5 | Medium breaks: citation accuracy (amendment and section in force) | ≥ 0.80 | | |
+| S6 | Hard breaks routed to `needs_investigation` | ≥ 0.90 | | |
+| S7 | LLM cost per break reaching the workflow | ≤ $0.01 | | |
+| S8 | Reviewer goes from a break to approve/reject in the UI without a terminal | yes | | |
+
+S1–S3 are engineering gates; S4–S7 decide the hypothesis; S8 decides whether the product is demonstrable.
+
 ## Primary metric: break closure cascade
 
-Updated in Iterations 5 and 7. This is the central README table.
+Rules row from MVP M2, Workflow row from M3, Agent row from post-MVP P5. This is the central README table.
 
 | Level | Share closed — simple | medium | hard | Accuracy | Cost / break | p50 / p95 | Dataset | Commit |
 |---|---|---|---|---|---|---|---|---|
@@ -20,9 +37,9 @@ Updated in Iterations 5 and 7. This is the central README table.
 | Agent | | | | | | | | |
 | Escalated | | | | — | — | — | | |
 
-## Iteration 2 — break detection (deterministic)
+## MVP M1 — break detection (deterministic)
 
-Target: precision and recall ≥ 0.98 per type.
+Target (S1): precision and recall ≥ 0.98 per type, on seed 42 and 3 other seeds.
 
 | Break type | Precision | Recall | Support | Dataset | Commit |
 |---|---|---|---|---|---|
@@ -32,13 +49,15 @@ Target: precision and recall ≥ 0.98 per type.
 | `date_mismatch` | | | | | |
 | `stale_pending` | | | | | |
 
-## Iteration 3 — LLM schema mapping
+## Post-MVP P2 — LLM schema mapping
 
 | Variant | Field accuracy | Transform accuracy | Cost / file | p50 / p95 | Dataset | Commit |
 |---|---|---|---|---|---|---|
 | baseline | | | | | | |
 
-## Iteration 4 — retrieval over agreements
+## Post-MVP P3 — retrieval over agreements
+
+The long context row is measured in MVP M3.
 
 | Variant | recall@5 | MRR | p50 / p95 | Cost / query | Dataset | Commit |
 |---|---|---|---|---|---|---|
@@ -47,13 +66,16 @@ Target: precision and recall ≥ 0.98 per type.
 | hybrid + rerank | | | | | | |
 | long context (no RAG) | | | | | | |
 
-## Iteration 5 — workflow explainer
+## MVP M3 — workflow explainer
 
-| Variant | Root cause accuracy | Citation correctness | `needs_investigation` rate on hard | Cost / break | Dataset | Commit |
+Run on both models; the model choice is an eval result.
+
+| Model | Root cause accuracy | Citation correctness | `needs_investigation` rate on hard | Cost / break | Dataset | Commit |
 |---|---|---|---|---|---|---|
-| baseline | | | | | | |
+| Haiku | | | | | | |
+| Sonnet | | | | | | |
 
-## Iteration 7 — workflow vs agent on the hard set
+## Post-MVP P5 — workflow vs agent on the hard set
 
 | Approach | Root cause accuracy | Trajectory score | Cost / case | p50 / p95 | Dataset | Commit |
 |---|---|---|---|---|---|---|
@@ -63,3 +85,5 @@ Target: precision and recall ≥ 0.98 per type.
 ## Log
 
 Append one line per recorded change: date, table, what changed, why.
+
+- 2026-10-05 · MVP success criteria · targets S1–S8 fixed and section headings moved to the MVP and post-MVP plans · ADR 0008, issue #43.
