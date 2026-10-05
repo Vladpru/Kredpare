@@ -17,3 +17,6 @@ __pycache__/
 .coverage
 coverage.xml
 htmlcov/
+
+# Generated synthetic data (kredpare-datagen)
+data/
