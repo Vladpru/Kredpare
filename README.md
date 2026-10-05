@@ -7,7 +7,7 @@ Daily reconciliation of files exchanged between a company and its counterparties
 
 v1 domain: lending (forward flow loan sales). All data in this repository is synthetic.
 
-**Status:** Iteration 0 (foundation) is done — [`v0.1.0`](https://github.com/Gideonxqt/Kredpare/releases/tag/v0.1.0). See [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the roadmap.
+**Status:** foundation and synthetic data with ground truth are done. Next: an MVP that tests whether rules plus one LLM call can explain most breaks — see [`docs/MVP_PLAN.md`](docs/MVP_PLAN.md), then [`docs/POST_MVP_PLAN.md`](docs/POST_MVP_PLAN.md).
 
 ## Stack
 
@@ -115,7 +115,9 @@ docs/              # plan, ADRs, domain docs, evals
 
 ## Docs
 
-- [Implementation plan](docs/IMPLEMENTATION_PLAN.md) — scope, iterations, Definition of Done
+- [MVP plan](docs/MVP_PLAN.md) — current scope, steps, success criteria
+- [Post-MVP plan](docs/POST_MVP_PLAN.md) — the rest of v1, after the MVP verdict
+- [Original implementation plan](docs/IMPLEMENTATION_PLAN.md) — component design reference
 - [Glossary](docs/glossary.md) and [domain docs](docs/domain/) — counterparties, canonical schema, break taxonomy
 - [Architecture decisions](docs/adr/)
 - [Eval results](docs/evals.md)

@@ -7,7 +7,7 @@ Rules for every table:
 - Record real numbers only. An empty cell means "not measured yet", never an estimate.
 - Each row states the **dataset** (name, size, datagen seed) and the **commit** it was measured on.
 - Cost is USD per item, from LangSmith traces. Latency is p50 / p95 in seconds.
-- Targets come from `IMPLEMENTATION_PLAN.md`. A missed target is recorded as-is, with a note.
+- Targets come from `MVP_PLAN.md` (success criteria) and, after the MVP, `POST_MVP_PLAN.md`. A missed target is recorded as-is, with a note.
 
 ## Primary metric: break closure cascade
 

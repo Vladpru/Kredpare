@@ -4,8 +4,9 @@ Daily reconciliation of files exchanged between a company and its counterparties
 
 ## Source of truth
 
-- `docs/IMPLEMENTATION_PLAN.md` is the source of truth for scope, order, and Definition of Done.
-- Before starting **every** iteration, follow the plan's section **"Instructions for Claude Code"**: read the iteration's "Before starting" block, verify what you can, ask the user about the rest in one list, and do not start until every item is confirmed.
+- `docs/MVP_PLAN.md` is the source of truth for scope, order, and Definition of Done **until the MVP verdict** (step M4). After the verdict: `docs/POST_MVP_PLAN.md`. See ADR 0008.
+- `docs/IMPLEMENTATION_PLAN.md` is the original full plan: the reference for component design, not for order. Iterations 0–1 from it are done.
+- Before starting **every** step or phase, follow the active plan's section **"Instructions for Claude Code"**: read the step's "Before starting" block, verify what you can, ask the user about the rest in one list, and do not start until every item is confirmed.
 - `docs/architecture.html` is a visual board that predates the rules → workflow → agent cascade and uses older names (`partners`, `loans`, `contract`, `query_loans`, `search_contract`). Where it conflicts with the plan, the plan wins.
 - Domain docs: `docs/glossary.md`, `docs/domain/*.md`. Decisions: `docs/adr/`. Eval results: `docs/evals.md`.
 

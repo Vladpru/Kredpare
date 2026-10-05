@@ -1,5 +1,7 @@
 # Kredpare — Implementation Plan
 
+> **Order superseded (2026-10-05).** Iterations 0–1 are done. The remaining work now follows [MVP_PLAN.md](MVP_PLAN.md) first, then [POST_MVP_PLAN.md](POST_MVP_PLAN.md) ([ADR 0008](adr/0008-mvp-before-full-plan.md)). This document stays the reference for the design of every component.
+
 Architecture: [architecture.html](architecture.html).
 
 ## What we are building
