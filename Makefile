@@ -1,6 +1,7 @@
 .PHONY: up down check test api worker beat
 
 BACKEND := uv run --directory backend
+DATAGEN := uv run --directory datagen
 
 up:
 	docker compose up -d --wait
@@ -14,9 +15,13 @@ check:
 	$(BACKEND) ruff format --check .
 	$(BACKEND) pyright
 	$(BACKEND) lint-imports
+	$(DATAGEN) ruff check .
+	$(DATAGEN) ruff format --check .
+	$(DATAGEN) pyright
 
 test:
 	$(BACKEND) pytest
+	$(DATAGEN) pytest
 
 api:
 	$(BACKEND) uvicorn kredpare.core.api.app:app --reload

@@ -59,7 +59,7 @@ known-third-party = ["alembic"]
 include = ["src", "tests"]
 strict = ["src"]
 pythonVersion = "3.12"
-venvPath = "."
+venvPath = ".."  # the uv workspace environment lives at the repo root
 venv = ".venv"
 
 [tool.pytest.ini_options]

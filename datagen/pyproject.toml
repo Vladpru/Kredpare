@@ -1,0 +1,39 @@
+[project]
+name = "kredpare-datagen"
+version = "0.0.0"
+description = "Synthetic lending files, break injector, and ground truth for Kredpare evals."
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "holidays>=0.105",
+    "kredpare",
+]
+
+[project.scripts]
+kredpare-datagen = "kredpare_datagen.cli:main"
+
+[tool.uv.sources]
+kredpare = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.168.4",
+]
+
+[tool.ruff]
+extend = "../backend/pyproject.toml"
+
+[tool.pyright]
+include = ["src", "tests"]
+strict = ["src"]
+pythonVersion = "3.12"
+venvPath = ".."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--strict-config"]

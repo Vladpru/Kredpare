@@ -28,9 +28,9 @@ v1 domain: lending (forward flow loan sales). All data in this repository is syn
 ### 1. Install dependencies
 
 ```bash
-uv sync --directory backend
+uv sync --all-packages                 # backend + datagen, one environment in .venv
 (cd web && pnpm install)
-backend/.venv/bin/pre-commit install   # optional: git hooks
+.venv/bin/pre-commit install   # optional: git hooks
 ```
 
 ### 2. Configure `.env`
