@@ -1,6 +1,6 @@
 # Canonical schema
 
-Status: **draft for review**. All values are synthetic. Implemented in Iteration 1 (Pydantic for records, Pandera for file-level validation).
+Status: **approved** 2026-10-05. All values are synthetic. Implemented in Iteration 1 (Pydantic for records, Pandera for file-level validation).
 
 Every counterparty file is mapped into one of these schemas. Matching, rules, and tools only ever see canonical records, never raw columns.
 
