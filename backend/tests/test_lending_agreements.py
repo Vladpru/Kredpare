@@ -49,6 +49,7 @@ def test_pricing_grid_is_exact_decimal_fractions() -> None:
     amended = parse_pricing_grid(docs["amendment-2"])
 
     assert isinstance(base, PricingGrid)
+    assert amended is not None
     assert base.prices["B"] == Decimal("1.0150")
     assert amended.prices["B"] == Decimal("1.0100")
     assert amended.source == "amendment-2 §4.1"
