@@ -1,6 +1,6 @@
 # Break taxonomy (lending)
 
-Status: **draft for review**. All examples are synthetic.
+Status: **approved** 2026-10-05. All examples are synthetic.
 
 ## Two axes: break type and root cause
 
@@ -81,7 +81,7 @@ Hard breaks must pass the plan's test: **you cannot explain them without queryin
 One JSON line per injected break:
 
 ```json
-{"break_id": "gt-000123", "counterparty_id": "cp-a", "batch_id": "2026-09-14", "loan_ids": ["L-004512"],
+{"break_id": "gt-000123", "counterparty_id": "cp-brackwater", "batch_id": "cp-brackwater-2026-08-31", "loan_ids": ["L-004512"],
  "break_type": "amount_mismatch", "field": "accrued_interest", "cause": "accrued_interest_error",
  "difficulty": "medium", "wrong_side": "counterparty", "expected_level": "workflow",
  "expected_citation": "amendment-1 §4.2", "expected_proposal": "email"}

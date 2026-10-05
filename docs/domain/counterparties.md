@@ -1,6 +1,6 @@
 # Counterparties
 
-Status: **draft for review**. Every name, id, number, and agreement term below is invented. Any resemblance to a real company is accidental.
+Status: **approved** 2026-10-05. Every name, id, number, and agreement term below is invented. Any resemblance to a real company is accidental.
 
 ## Parties
 
