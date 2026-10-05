@@ -104,7 +104,7 @@ Claude never asks for a key to be pasted into the chat. Each step is one milesto
 
 ## M3 — Workflow: one LLM call with the agreement (weeks 4–5)
 
-**Before starting (Claude asks):** `.env` has `ANTHROPIC_API_KEY` set and the Anthropic spend limit is configured. The user approves the synthetic agreement texts (structure, sections, amendments, the RAG traps from `counterparties.md`) and the `confidence` threshold for `needs_investigation` (proposal: 0.7).
+**Before starting (Claude asks):** `.env` has `DEEPSEEK_API_KEY` set (provider decision: [ADR 0011](adr/0011-deepseek-for-workflow-llm.md)). The user approves the synthetic agreement texts (structure, sections, amendments, the RAG traps from `counterparties.md`) and the `confidence` threshold for `needs_investigation` (proposal: 0.7).
 
 **Goal:** the second cascade level explains medium breaks with a citation; hard breaks are routed to a human.
 
@@ -116,7 +116,7 @@ Claude never asks for a key to be pasted into the chat. Each step is one milesto
   4. `confidence` below the threshold, or no candidate reproduces the value → `needs_investigation`.
 - Agreement and file content is passed as data inside clear delimiters (basic prompt-injection hygiene).
 - Every call writes an audit event with `model`, `prompt_version`, tokens, and cost.
-- Model choice is an eval result, not an assumption: run the medium set on Haiku and on Sonnet, record both.
+- Model choice is an eval result, not an assumption: run the medium set on `deepseek-flash` and on `deepseek-v4-pro`, record both ([ADR 0011](adr/0011-deepseek-for-workflow-llm.md)).
 
 **Evals:** `kredpare eval workflow <dir>`: root cause accuracy (S4), citation accuracy (S5), wrong-side accuracy, share of hard breaks routed to `needs_investigation` (S6), cost per break (S7), p50/p95 latency. Results cached by input hash so reruns are free. Baseline recorded in `docs/evals.md`, including the "long context" row of the RAG table.
 

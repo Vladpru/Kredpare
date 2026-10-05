@@ -76,8 +76,8 @@ Run on both models; the model choice is an eval result.
 
 | Model | Root cause accuracy | Citation correctness | `needs_investigation` rate on hard | Cost / break | Dataset | Commit |
 |---|---|---|---|---|---|---|
-| Haiku | | | | | | |
-| Sonnet | | | | | | |
+| deepseek-flash | | | | | | |
+| deepseek-v4-pro | | | | | | |
 
 ## Post-MVP P5 — workflow vs agent on the hard set
 
