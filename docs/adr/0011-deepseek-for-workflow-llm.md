@@ -14,6 +14,7 @@ The workflow level (M3) makes one LLM call per break and must record accuracy an
 - One adapter, `core/cases/deepseek.py`, talks to the OpenAI-compatible endpoint with the `openai` SDK. Base URL, API key, model id, and thinking mode come from settings; the flow never names a model.
 - Output is requested in JSON mode, with the JSON schema in the system prompt, and validated with pydantic. Invalid JSON, a schema error, an empty reply, or a reply truncated at `max_tokens` becomes `needs_investigation` with the reason recorded. Values are never repaired.
 - Prices live in one table keyed by model id, with the source URL and the date checked. DeepSeek publishes peak and half-price off-peak rates; the table uses the peak rate, so recorded cost is an upper bound. Cache-hit input is not discounted. A model without a row raises, so cost is never silently zero.
+- The workflow does not call the model when no clause-supported candidate reproduces the counterparty value: the result is `needs_investigation` (`no_supported_candidate`) at zero cost, with `llm_called=False` in usage and in the audit payload. The eval reports how many breaks reached the LLM; cost per break (S7) is computed over breaks that reached the workflow, and records how many of those were short-circuited.
 - Thinking mode is off by default (cheaper, and JSON mode is documented without it). It is a setting.
 - The M3 model comparison becomes `deepseek-flash` against `deepseek-v4-pro`.
 

@@ -29,6 +29,7 @@ from kredpare.core.cases.llm import (
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.7
 UNKNOWN_CAUSE = "unknown"
+NO_SUPPORTED_CANDIDATE = "no_supported_candidate"
 
 
 class WorkflowStatus(StrEnum):
@@ -115,6 +116,8 @@ class WorkflowUsage:
     cached: bool
     """True when served from the local cache: tokens, cost, and latency are those of the
     original call, and nothing was spent now."""
+    llm_called: bool = True
+    """False when code decided without asking the model: tokens, cost, and latency are zero."""
 
 
 @dataclass(frozen=True)
@@ -162,10 +165,23 @@ def run_workflow(
     cache: ResponseCache | None = None,
     prices: dict[str, ModelPrice] | None = None,
 ) -> WorkflowResult:
-    """Explain one break. Code, not the model, decides the status."""
+    """Explain one break. Code, not the model, decides the status.
+
+    When no clause-supported candidate reproduces the counterparty value, the model is not
+    called and the cache is not touched: the result is needs_investigation at zero cost.
+    """
     price_table = MODEL_PRICES if prices is None else prices
     documents = list(spec.load_documents(brk.counterparty_id))
     candidates = [dict(c) for c in spec.build_candidates(brk, documents)]
+    if not _has_supported_candidate(candidates):
+        return WorkflowResult(
+            WorkflowStatus.NEEDS_INVESTIGATION,
+            [NO_SUPPORTED_CANDIDATE],
+            None,
+            candidates,
+            WorkflowUsage(model, spec.prompt_version, 0, 0, Decimal(0), 0.0, False, False),
+            "",
+        )
     prompt = spec.render_prompt(brk, documents, candidates)
     key = input_hash(model, spec.prompt_version, prompt)
 
@@ -238,6 +254,11 @@ def _from_cache(hit: dict[str, Any]) -> tuple[WorkflowExplanation | None, str | 
         return None, f"cached reply no longer validates: {exc.error_count()} errors"
 
 
+def _has_supported_candidate(candidates: Sequence[Mapping[str, Any]]) -> bool:
+    """A clause-supported candidate reproduces the counterparty value: the agreements explain it."""
+    return any(c["reproduces_counterparty_value"] and c["supported_by"] for c in candidates)
+
+
 def _reasons(
     spec: WorkflowSpec,
     explanation: WorkflowExplanation | None,
@@ -254,9 +275,6 @@ def _reasons(
         reasons.append(f"confidence {explanation.confidence} is below threshold {threshold}")
     if explanation.cause == UNKNOWN_CAUSE or explanation.cause not in spec.causes:
         reasons.append(f"cause {explanation.cause!r} is unknown or outside the vocabulary")
-    explaining = [c for c in candidates if c["reproduces_counterparty_value"] and c["supported_by"]]
-    if not explaining:
-        reasons.append("no clause-supported candidate reproduces the counterparty value")
     cited = next((c for c in candidates if c["id"] == explanation.candidate_id), None)
     if cited is None:
         reasons.append(f"candidate {explanation.candidate_id!r} does not exist")

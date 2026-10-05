@@ -11,6 +11,7 @@ from kredpare.core.cases.workflow import (
     WorkflowBreak,
     WorkflowExplanation,
     WorkflowStatus,
+    audit_payload,
     run_workflow,
 )
 from kredpare.domains.lending.pricing import DayCount, accrued_interest
@@ -129,6 +130,7 @@ def test_medium_accrued_interest_break_is_explained_with_the_citation() -> None:
     assert result.explanation is not None
     assert result.explanation.citations == ["amendment-1 §4.2"]
     assert len(llm.calls) == 1
+    assert result.usage.llm_called is True
     user = llm.calls[0]["user"]
     assert user.index('id="base"') < user.index('id="amendment-1"') < user.index('id="amendment-2"')
     assert 'effective_date="2026-08-24"' in user
@@ -150,23 +152,50 @@ def test_price_grid_amendment_break_is_explained() -> None:
     assert [c["id"] for c in result.candidates] == ["grid:base §4.1", "grid:amendment-2 §4.1"]
 
 
-def test_hard_break_without_a_clause_is_not_given_an_invented_explanation() -> None:
+def test_hard_break_without_a_clause_is_not_given_an_invented_explanation(
+    tmp_path: Path,
+) -> None:
     brk = _quillmont_inclusive_break()
-    inclusive = "actual/365|end_inclusive|from_funding|half_up"
-    # Confident, schema-valid, and wrong: an invented amendment, then a real but unrelated clause.
-    for citation in ("amendment-3 §4.2", "base §4.2"):
-        llm = FakeLLM(_explanation(candidate_id=inclusive, citations=[citation], confidence=0.99))
-
-        result = _run(brk, llm)
-
-        assert result.status is WorkflowStatus.NEEDS_INVESTIGATION
-        assert any("clause-supported candidate" in reason for reason in result.reasons)
-        assert any("does not reproduce the counterparty value" in r for r in result.reasons)
-
-    invented = _run(
-        brk, FakeLLM(_explanation(candidate_id=inclusive, citations=["amendment-3 §4.2"]))
+    # Even a confident, schema-valid answer with an invented citation could not be used:
+    # the client is never asked.
+    llm = FakeLLM(
+        _explanation(
+            candidate_id="actual/365|end_inclusive|from_funding|half_up",
+            citations=["amendment-3 §4.2"],
+            confidence=0.99,
+        )
     )
-    assert any("'amendment-3 §4.2' does not exist" in r for r in invented.reasons)
+    cache = ResponseCache(tmp_path / "cache")
+
+    result = _run(brk, llm, cache=cache)
+
+    assert result.status is WorkflowStatus.NEEDS_INVESTIGATION
+    assert result.reasons == ["no_supported_candidate"]
+    assert result.explanation is None
+    assert llm.calls == []
+    assert not (tmp_path / "cache").exists()
+    assert result.usage.llm_called is False
+    assert result.usage.cost_usd == Decimal(0)
+    assert (result.usage.input_tokens, result.usage.output_tokens) == (0, 0)
+    assert audit_payload(result)["llm_called"] is False
+
+
+def test_field_without_candidates_makes_no_call() -> None:
+    brk = _brackwater_break()
+    brk = WorkflowBreak(
+        brk.counterparty_id,
+        "settlement_date",
+        date(2026, 8, 31),
+        date(2026, 8, 29),
+        brk.company_record,
+        {},
+    )
+    llm = FakeLLM(_explanation())
+
+    result = _run(brk, llm)
+
+    assert result.status is WorkflowStatus.NEEDS_INVESTIGATION
+    assert llm.calls == []
 
 
 def test_citation_that_does_not_exist_blocks_an_otherwise_valid_explanation() -> None:

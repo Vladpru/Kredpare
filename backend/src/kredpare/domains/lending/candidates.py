@@ -36,6 +36,9 @@ _DAY_COUNT_IN_TEXT = {DayCount.ACTUAL_365: "Actual/365", DayCount.THIRTY_360: "3
 _ACCRUAL_TITLE = re.compile(r"accrued interest", re.IGNORECASE)
 
 
+CANDIDATE_FIELDS = frozenset({"accrued_interest", "price_pct", "purchase_price"})
+
+
 @dataclass(frozen=True)
 class LoanTerms:
     upb: Decimal

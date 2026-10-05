@@ -11,7 +11,7 @@ from kredpare.domains.lending.agreement_documents import (
     citation_exists,
     load_agreements,
 )
-from kredpare.domains.lending.candidates import LoanTerms, build_candidates
+from kredpare.domains.lending.candidates import CANDIDATE_FIELDS, LoanTerms, build_candidates
 from kredpare.domains.lending.workflow.prompt import CAUSES, PROMPT_VERSION, render_prompt
 
 
@@ -46,6 +46,8 @@ class LendingWorkflowSpec:
     def build_candidates(
         self, brk: WorkflowBreak, documents: Sequence[WorkflowDocument]
     ) -> Sequence[Mapping[str, Any]]:
+        if brk.field not in CANDIDATE_FIELDS:
+            return []
         record = brk.company_record
         loan = LoanTerms(
             upb=Decimal(str(record["upb"])),
