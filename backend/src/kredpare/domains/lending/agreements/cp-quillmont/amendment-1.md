@@ -10,7 +10,7 @@ title: Amendment 1 to the Quillmont Forward Flow Loan Sale Agreement
 
 This amendment is made between Larkspan Auto Finance and Quillmont Credit Fund and amends the base agreement effective 2026-01-01. It takes effect on 2026-06-01. Every other provision of the base agreement stays in force.
 
-## §1 Purpose
+## Purpose
 
 The parties wish to state what happens when a scheduled Settlement Date is not a Business Day, which the base agreement left open.
 
@@ -18,6 +18,6 @@ The parties wish to state what happens when a scheduled Settlement Date is not a
 
 If a scheduled Settlement Date is not a Business Day, the Settlement Date is the following Business Day. The cut-off date for the Batch is calculated from the rolled Settlement Date.
 
-## §2 General
+## General Provisions
 
 This amendment may be signed in counterparts. The governing law of the base agreement applies.
