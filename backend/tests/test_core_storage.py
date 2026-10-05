@@ -13,6 +13,7 @@ TABLES = {
     "records",
     "row_errors",
     "breaks",
+    "explanations",
     "audit_events",
 }
 

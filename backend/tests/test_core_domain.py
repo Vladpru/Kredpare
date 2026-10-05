@@ -17,6 +17,7 @@ from kredpare.core.domain import (
 )
 from kredpare.core.mapping.config import ColumnMapping, MappingConfig
 from kredpare.core.mapping.transforms import Transform
+from kredpare.core.rules.types import BreakView, Explanation, RuleContext
 
 
 class Invoice(BaseModel):
@@ -40,6 +41,15 @@ class Payment(BaseModel):
 @dataclass(frozen=True)
 class _Named:
     name: str
+
+
+@dataclass(frozen=True)
+class _StubRule:
+    name: str
+    break_types: tuple[str, ...] = ()
+
+    def explain(self, brk: BreakView, context: RuleContext) -> Explanation | None:
+        return None
 
 
 INVOICE = SchemaSpec(Invoice, record_id_field="invoice_no")
@@ -85,7 +95,7 @@ def test_domain_spec_rules_and_tools_default_to_empty() -> None:
 
 
 def test_domain_spec_registers_rules_and_tools_by_name() -> None:
-    spec = _spec(rules=(_Named("r1"),), tools=(_Named("t1"),))
+    spec = _spec(rules=(_StubRule("r1"),), tools=(_Named("t1"),))
 
     assert [r.name for r in spec.rules] == ["r1"]
     assert [t.name for t in spec.tools] == ["t1"]
