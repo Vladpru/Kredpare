@@ -10,6 +10,7 @@ import polars as pl
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
+from kredpare.core.domain import canonical_frame
 from kredpare.domains.lending.schemas import FundedLoan
 from kredpare.domains.lending.spec import LENDING
 
@@ -113,7 +114,7 @@ def _read_seller_csv(text: str) -> pl.DataFrame:
             else:
                 parsed[name] = value
         rows.append(parsed)
-    return pl.DataFrame(rows)
+    return canonical_frame(rows)
 
 
 def _assert_valid(dataset: Dataset) -> None:
@@ -124,10 +125,10 @@ def _assert_valid(dataset: Dataset) -> None:
         assert seller.errors == ()
         assert list(seller.rows) == batch.funded
         if batch.confirmation is not None:
-            frame = pl.DataFrame([r.model_dump() for r in batch.confirmation])
+            frame = canonical_frame([r.model_dump() for r in batch.confirmation])
             assert LENDING.schema("PurchaseConfirmation").validate_frame(frame).errors == ()
     if dataset.onboardings:
-        frame = pl.DataFrame([o.model_dump() for o in dataset.onboardings])
+        frame = canonical_frame([o.model_dump() for o in dataset.onboardings])
         assert LENDING.schema("ServicerOnboarding").validate_frame(frame).errors == ()
 
 

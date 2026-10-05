@@ -76,3 +76,7 @@ jobs:
           pytest --cov=kredpare --cov-report=term-missing --cov-report=xml
       - name: Datagen tests with coverage
         run: uv run --directory datagen pytest --cov=kredpare_datagen --cov-report=term-missing
+      - name: Break detection eval (MVP S1)
+        run: |
+          uv run kredpare-datagen --seed 42 --out "$RUNNER_TEMP/dataset"
+          uv run kredpare eval matching "$RUNNER_TEMP/dataset" --as-of 2026-09-08 --markdown

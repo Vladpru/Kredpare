@@ -4,8 +4,9 @@ See docs/adr/0004-core-domains-boundary.md.
 """
 
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Protocol
 
 import pandera.polars as pa
@@ -13,6 +14,7 @@ import polars as pl
 from pydantic import BaseModel, ValidationError
 
 from kredpare.core.canonical import CanonicalRecord
+from kredpare.core.mapping.config import MappingConfig
 
 
 class Rule(Protocol):
@@ -22,11 +24,29 @@ class Rule(Protocol):
     def name(self) -> str: ...
 
 
+class BusinessCalendar(Protocol):
+    """The domain's business days, used to age pending records."""
+
+    def add_business_days(self, day: date, count: int) -> date: ...
+
+
 class Tool(Protocol):
     """A deterministic tool the workflow or agent may call. Signature lands with the agent."""
 
     @property
     def name(self) -> str: ...
+
+
+def canonical_frame(rows: Sequence[Mapping[str, object]]) -> pl.DataFrame:
+    """A frame of canonical values kept as Python objects.
+
+    Never build canonical frames with type inference: Polars infers a Decimal scale from the
+    first rows and silently rounds later rows to it. A cell missing from a row becomes null.
+    """
+    columns = list(dict.fromkeys(name for row in rows for name in row))
+    return pl.DataFrame(
+        [pl.Series(name, [row.get(name) for row in rows], dtype=pl.Object) for name in columns]
+    )
 
 
 @dataclass(frozen=True)
@@ -94,6 +114,13 @@ class MatchDeclaration:
     key_fields: tuple[str, ...]
     money_fields: tuple[str, ...]
     date_fields: tuple[str, ...]
+    delivery_fields: tuple[str, ...] | None = None
+    """Key fields naming one delivery of the right side (for example one batch file).
+    A left record missing on the right is a missing_record only when that delivery arrived;
+    otherwise it is pending. None: a missing right record is always pending."""
+    age_from: str | None = None
+    """Left field a pending record ages from; past the domain's threshold it is stale_pending.
+    None: pending records never go stale."""
 
 
 @dataclass(frozen=True)
@@ -115,6 +142,9 @@ class DomainSpec:
     match_declarations: tuple[MatchDeclaration, ...]
     rules: tuple[Rule, ...] = field(default=())
     tools: tuple[Tool, ...] = field(default=())
+    mappings: tuple[MappingConfig, ...] = field(default=())
+    calendar: BusinessCalendar | None = None
+    stale_after_business_days: int = 5
 
     def __post_init__(self) -> None:
         _reject_duplicates("schema", (s.name for s in self.schemas))
@@ -123,6 +153,30 @@ class DomainSpec:
         _reject_duplicates("tool", (t.name for t in self.tools))
         for declaration in self.match_declarations:
             self._check_declaration(declaration)
+        _reject_duplicates("mapping header", (m.header_hash for m in self.mappings))
+        for mapping in self.mappings:
+            self._check_mapping(mapping)
+
+    def mapping_for(self, header_hash: str) -> MappingConfig | None:
+        return next((m for m in self.mappings if m.header_hash == header_hash), None)
+
+    def _check_mapping(self, mapping: MappingConfig) -> None:
+        try:
+            spec = self.schema(mapping.schema_name)
+        except KeyError:
+            raise ValueError(
+                f"mapping {mapping.name} targets unknown schema {mapping.schema_name!r}"
+            ) from None
+        targets = {c.target for c in mapping.columns}
+        if mapping.batch_id_from_metadata:
+            targets.add("batch_id")
+        missing = sorted(spec.field_names - targets)
+        extra = sorted(targets - spec.field_names)
+        if missing or extra:
+            raise ValueError(
+                f"mapping {mapping.name} must cover {spec.name} exactly; "
+                f"missing {missing}, unknown {extra}"
+            )
 
     def schema(self, name: str) -> SchemaSpec:
         for spec in self.schemas:
@@ -146,6 +200,16 @@ class DomainSpec:
             for name in compared:
                 if name not in side.field_names:
                     raise ValueError(f"compared field {name!r} is not a field of {side.name}")
+        for name in declaration.delivery_fields or ():
+            if name not in declaration.key_fields:
+                raise ValueError(f"delivery field {name!r} is not a match key")
+        if declaration.age_from is not None:
+            if declaration.age_from not in sides[0].field_names:
+                raise ValueError(
+                    f"age_from {declaration.age_from!r} is not a field of {sides[0].name}"
+                )
+            if self.calendar is None:
+                raise ValueError("age_from needs a business calendar on the domain")
 
 
 def _messages(exc: ValidationError) -> tuple[str, ...]:

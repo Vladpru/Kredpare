@@ -10,13 +10,12 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Literal
 
-from kredpare.domains.lending.pricing import DayCount
-
-from kredpare_datagen.calendar import (
+from kredpare.domains.lending.calendar import (
     add_business_days,
     following_business_day,
     last_business_day_of_month,
 )
+from kredpare.domains.lending.pricing import DayCount
 
 Tier = Literal["A", "B", "C", "D"]
 TIERS: tuple[Tier, ...] = ("A", "B", "C", "D")

@@ -24,4 +24,4 @@ Before continuing with the full plan, build an MVP (`MVP_PLAN.md`) that tests on
 
 - **Positive:** a measured go/no-go after about 6 weeks. Every MVP component is reused by the post-MVP phases (ingest becomes a Celery task, the workflow becomes a LangGraph node, the decision endpoint becomes HITL #2).
 - **Negative / cost:** some rework when ingest moves behind the API and the workflow moves into LangGraph. Long context may look better than it would on real, longer agreements.
-- **Follow-up:** M4 writes ADR 0009 with the verdict. GitHub milestones for Iterations 2–10 should be replaced by MVP M1–M4 and post-MVP P1–P8 milestones.
+- **Follow-up:** M4 writes the verdict ADR. GitHub milestones for Iterations 2–10 should be replaced by MVP M1–M4 and post-MVP P1–P8 milestones.

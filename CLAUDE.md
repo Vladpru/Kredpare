@@ -32,6 +32,9 @@ Available from Iteration 0 onward (the `Makefile` does not exist before then):
 - `make check` — ruff, pyright, import-linter.
 - `make test` — pytest.
 - Narrow test: `uv run pytest path/to/test_file.py::test_name`.
+- `uv run kredpare-datagen --seed 42 --out <dir>` — synthetic files + ground truth.
+- `uv run kredpare ingest <dir>` / `uv run kredpare match --as-of <date>` — load files, detect breaks (dev database).
+- `uv run kredpare eval matching <dir> --as-of 2026-09-08` — break detection eval in a temporary database.
 
 Run the narrowest relevant test first, then `make check && make test` before declaring work done.
 

@@ -8,7 +8,9 @@ dependencies = [
     "alembic>=1.20.0",
     "boto3>=1.43.108",
     "celery[redis]>=5.6",
+    "duckdb>=1.5.6",
     "fastapi>=0.142.2",
+    "holidays>=0.105",
     "pandera[polars]>=0.33.1",
     "polars>=1.44.2",
     "psycopg[binary]>=3.3.6",
@@ -17,6 +19,9 @@ dependencies = [
     "sqlalchemy>=2.0",
     "uvicorn[standard]>=0.54.0",
 ]
+
+[project.scripts]
+kredpare = "kredpare.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.11,<0.12"]

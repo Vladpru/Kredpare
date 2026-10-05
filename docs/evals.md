@@ -41,13 +41,17 @@ Rules row from MVP M2, Workflow row from M3, Agent row from post-MVP P5. This is
 
 Target (S1): precision and recall ≥ 0.98 per type, on seed 42 and 3 other seeds.
 
-| Break type | Precision | Recall | Support | Dataset | Commit |
-|---|---|---|---|---|---|
-| `missing_record` | | | | | |
-| `duplicate` | | | | | |
-| `amount_mismatch` | | | | | |
-| `date_mismatch` | | | | | |
-| `stale_pending` | | | | | |
+Command: `kredpare eval matching <dir> --as-of 2026-09-08` (ingest and matching in a temporary database). Dataset: `kredpare-datagen --days 30`, window 2026-08-10 to 2026-09-08, 40 loans per batch. Commit `1499a43`.
+
+| Break type | Precision | Recall | Support (seed 42 / 7 / 1234 / 2026) |
+|---|---|---|---|
+| `missing_record` | 1.000 | 1.000 | 5 / 5 / 5 / 5 |
+| `duplicate` | 1.000 | 1.000 | 2 / 2 / 2 / 2 |
+| `amount_mismatch` | 1.000 | 1.000 | 228 / 232 / 248 / 246 |
+| `date_mismatch` | 1.000 | 1.000 | 3 / 3 / 3 / 3 |
+| `stale_pending` | 1.000 | 1.000 | 40 / 40 / 40 / 40 |
+
+Precision and recall are identical on all four seeds. Note: matching is deterministic and the data is synthetic, so 1.000 shows the engine and the generator agree on break semantics (ADR 0009); it says nothing yet about messy real files. CI runs this eval on seed 42 and fails below 0.98.
 
 ## Post-MVP P2 — LLM schema mapping
 
@@ -87,3 +91,4 @@ Run on both models; the model choice is an eval result.
 Append one line per recorded change: date, table, what changed, why.
 
 - 2026-10-05 · MVP success criteria · targets S1–S8 fixed and section headings moved to the MVP and post-MVP plans · ADR 0008, issue #43.
+- 2026-10-05 · MVP M1 break detection · first measurement, 1.000 on seeds 42, 7, 1234, 2026 · commit 1499a43.

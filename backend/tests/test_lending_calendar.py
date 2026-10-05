@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from kredpare_datagen.calendar import (
+from kredpare.domains.lending.calendar import (
     add_business_days,
     following_business_day,
     is_business_day,

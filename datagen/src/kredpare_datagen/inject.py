@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
 
+from kredpare.domains.lending.calendar import add_business_days
 from kredpare.domains.lending.pricing import DayCount, Rounding, purchase_price
 from kredpare.domains.lending.schemas import FundedLoan, PurchaseConfirmation
 
@@ -24,7 +25,6 @@ from kredpare_datagen.agreements import (
     Tier,
     terms_in_force,
 )
-from kredpare_datagen.calendar import add_business_days
 from kredpare_datagen.generate import Batch, Dataset, board, quote
 from kredpare_datagen.ground_truth import EXPECTED_LEVEL, Difficulty, GroundTruth, Side
 

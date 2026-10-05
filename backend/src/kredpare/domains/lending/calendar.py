@@ -38,3 +38,13 @@ def last_business_day_of_month(year: int, month: int) -> date:
     while not is_business_day(day):
         day -= timedelta(days=1)
     return day
+
+
+class UsBankCalendar:
+    """The calendar the lending domain gives core matching for ageing pending records."""
+
+    def add_business_days(self, day: date, count: int) -> date:
+        return add_business_days(day, count)
+
+
+US_BANK_CALENDAR = UsBankCalendar()

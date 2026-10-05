@@ -133,7 +133,7 @@ Claude never asks for a key to be pasted into the chat. Each step is one milesto
 - **API:** `GET /breaks` (filters: counterparty, break type, status, cascade level), `GET /breaks/{id}` (both rows, explanation, citation with the clause text), `POST /breaks/{id}/decision` (`approve` or `reject` with a comment). A decision is recorded in `audit_events`; **nothing is applied or sent.**
 - **Web** (Next.js, TS types from OpenAPI): breaks table, break page with the two rows side by side, the explanation, who explained it (rule or workflow), the cited clause, and approve / reject.
 - `make demo`: `make up` → migrations → `kredpare-datagen` → `ingest` → `match` → `explain` → API and web running.
-- **Verdict:** ADR `0009-mvp-verdict.md` with the success criteria table filled with measured values, what worked, what failed, and the decision: continue with the post-MVP plan as is, continue with changes, or stop.
+- **Verdict:** an ADR (next free number, `NNNN-mvp-verdict.md`) with the success criteria table filled with measured values, what worked, what failed, and the decision: continue with the post-MVP plan as is, continue with changes, or stop.
 
 **DoD:** `make demo` works from a clean checkout following the README. S8 checked by the chosen reviewers. Verdict ADR merged.
 

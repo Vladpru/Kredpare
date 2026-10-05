@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+import kredpare.core.tables  # noqa: F401  # registers the tables on Base.metadata
 from kredpare.core.db import Base
 from kredpare.core.settings import get_settings
 
