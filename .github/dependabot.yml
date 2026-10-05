@@ -7,7 +7,7 @@ updates:
     commit-message:
       prefix: ci
   - package-ecosystem: uv
-    directory: /backend
+    directory: /
     schedule:
       interval: weekly
     commit-message:

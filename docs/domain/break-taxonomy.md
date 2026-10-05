@@ -76,21 +76,31 @@ Hard breaks must pass the plan's test: **you cannot explain them without queryin
 | hard | `agent` (from Iteration 7) | Before Iteration 7: `needs_investigation`, never an invented explanation |
 | any, unexplainable | `escalated` | Human queue |
 
-## Ground truth record (draft)
+## Ground truth record
 
-One JSON line per injected break:
+One JSON line per injected cause instance: per loan for simple and medium causes, one record per group for hard causes.
 
 ```json
-{"break_id": "gt-000123", "counterparty_id": "cp-brackwater", "batch_id": "cp-brackwater-2026-08-31", "loan_ids": ["L-004512"],
- "break_type": "amount_mismatch", "field": "accrued_interest", "cause": "accrued_interest_error",
- "difficulty": "medium", "wrong_side": "counterparty", "expected_level": "workflow",
- "expected_citation": "amendment-1 §4.2", "expected_proposal": "email"}
+{"break_id": "gt-000123", "counterparty_id": "cp-brackwater", "batch_ids": ["cp-brackwater-2026-08-31"],
+ "loan_ids": ["L-004512"], "break_type": "amount_mismatch", "fields": ["accrued_interest", "purchase_price"],
+ "missing_side": null, "cause": "accrued_interest_error", "difficulty": "medium", "wrong_side": "counterparty",
+ "expected_level": "workflow", "expected_citations": ["amendment-1 §4.2"], "expected_proposal": "email"}
 ```
 
-Hard causes list all affected `loan_ids` in one ground truth record.
+- `fields`: every compared field the cause changes. Matching emits one break per (record, field), so evals expand `loan_ids × fields`. Empty for `missing_record`, `duplicate`, and `stale_pending`.
+- `missing_side`: set only for `missing_record` (`seller` or `counterparty`).
+- `batch_ids`: a list because `unannounced_rule_change` spans batches.
+- `wrong_side`: `null` for `confirmation_overdue` (nobody is wrong yet; the proposal is a reminder email).
+- `expected_citations`: empty for simple causes. `combined_causes` cites both the amendment and the rounding clause.
+- `expected_proposal`: `correction` when the seller is wrong, otherwise `email`.
+
+Hard causes list all affected `loan_ids` in one record. Every loan carries at most one cause.
 
 ## Decisions
 
 - Two medium causes instead of the plan's one: `accrued_interest_error` and `price_grid_amendment`. Reason: with one cause, workflow evals would measure one memorized pattern, not agreement reading. Approved 2026-10-02.
 - Non-money attribute differences are out of scope for v1.
 - `stale_pending` default: 5 business days.
+- Ground truth uses `fields`, `batch_ids`, and `expected_citations` lists instead of single values. Approved 2026-10-05.
+- `confirmation_overdue` means a whole batch confirmation file is not received; `loan_not_confirmed` means the file arrived without one loan. Approved 2026-10-05.
+- Medium causes pick the side that ignores the amendment by seed, once per batch, so both `correction` and `email` proposals occur. Approved 2026-10-05.

@@ -1,0 +1,3 @@
+# uv workspace root: one lockfile and one environment for the backend and datagen.
+[tool.uv.workspace]
+members = ["backend", "datagen"]

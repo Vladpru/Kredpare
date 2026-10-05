@@ -4,7 +4,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from kredpare.core.canonical import Id, Money, Ratio, round_half_up_cents
+from kredpare.core.canonical import Id, Money, Ratio
+from kredpare.domains.lending.pricing import purchase_price
 from kredpare.domains.lending.schemas._types import (
     ROW_CONFIG,
     DealerId,
@@ -45,7 +46,7 @@ class FundedLoan(BaseModel):
             raise ValueError("cut_off_date must not be after settlement_date")
         if self.upb > self.funded_amount:
             raise ValueError("upb must not exceed funded_amount")
-        expected = round_half_up_cents(self.upb * self.price_pct) + self.accrued_interest
+        expected = purchase_price(self.upb, self.price_pct, self.accrued_interest)
         if self.purchase_price != expected:
             raise ValueError(
                 f"purchase_price {self.purchase_price} must equal "

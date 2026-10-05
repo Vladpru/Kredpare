@@ -15,6 +15,6 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix]
-        files: ^backend/
+        files: ^(backend|datagen)/
       - id: ruff-format
-        files: ^backend/
+        files: ^(backend|datagen)/

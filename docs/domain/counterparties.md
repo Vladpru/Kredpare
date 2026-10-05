@@ -129,3 +129,5 @@ Default datagen window: **2026-08-10 to 2026-09-08** (30 days, `--days 30`). US 
 
 - Orlo Servicing is a separate, fourth party with one stable format. Approved 2026-10-02.
 - Default datagen window: 2026-08-10 to 2026-09-08. Approved 2026-10-02.
+- Quillmont's 09-02 batch: Tier B loans carry only `price_grid_amendment`; `unannounced_rule_change` covers every other Quillmont loan from the 08-26 batch on. Keeps one cause per loan. Approved 2026-10-05.
+- `combined_causes` and `accrued_interest_error` share the Brackwater 08-31 batch on different loans. Combined loans are picked so that neither cause alone reproduces the counterparty value.
