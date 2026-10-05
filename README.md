@@ -93,6 +93,9 @@ Stop the containers with `make down`.
 make check   # ruff, ruff format --check, pyright, import-linter
 make test    # pytest (needs `make up` and .env)
 uv run kredpare-datagen --seed 42 --days 30   # synthetic files + ground_truth.jsonl in data/generated/
+uv run kredpare ingest data/generated          # load them into Postgres (mapping, validation, row errors)
+uv run kredpare match --as-of 2026-09-08       # detect typed breaks
+uv run kredpare eval matching data/generated --as-of 2026-09-08   # precision/recall in a temp database
 uv run --directory backend pytest tests/test_health.py::test_health_ok_when_all_dependencies_reachable   # one test
 (cd web && pnpm lint && pnpm typecheck && pnpm build)
 ```
