@@ -30,10 +30,15 @@ if [ ! -f "$DATA_DIR/manifest.jsonl" ]; then
 fi
 uv run kredpare ingest "$DATA_DIR"
 uv run kredpare match --as-of "$AS_OF"
-uv run kredpare explain
+if [ -n "${GEMINI_API_KEY:-}" ] || grep -qE '^GEMINI_API_KEY=.+' .env 2>/dev/null; then
+  uv run kredpare explain
+else
+  echo "GEMINI_API_KEY not set: skipping the workflow level"
+  uv run kredpare explain --no-workflow
+fi
 
 trap 'kill 0' EXIT INT TERM
-(cd backend && uv run uvicorn kredpare.core.api.app:app --port 8000) &
+(cd backend && uv run uvicorn kredpare.api_main:app --port 8000) &
 (cd web && NEXT_PUBLIC_API_URL="http://localhost:8000" pnpm dev) &
 echo
 echo "Demo database: $DEMO_DB"
