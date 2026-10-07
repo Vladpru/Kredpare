@@ -274,3 +274,16 @@ def test_database_accepts_workflow_level_only_with_a_valid_side(pending: Engine)
 def test_lending_domain_declares_its_workflow() -> None:
     assert LENDING.workflow is not None
     assert re.fullmatch(r"lending-workflow-v\d+", LENDING.workflow.prompt_version)
+
+
+def test_run_stops_when_the_spend_cap_is_exceeded_and_a_rerun_continues(pending: Engine) -> None:
+    llm = SmartFake()
+
+    first = run_workflow_level(
+        pending, LENDING, llm=llm, model=MODEL, prices=PRICES, max_spend_usd=Decimal("0.0001")
+    )
+
+    assert first.stopped_by_budget and first.explained == 1
+    assert first.spent_usd == Decimal("0.0012")
+    rest = run_workflow_level(pending, LENDING, llm=llm, model=MODEL, prices=PRICES)
+    assert rest.explained == 1 and not rest.stopped_by_budget

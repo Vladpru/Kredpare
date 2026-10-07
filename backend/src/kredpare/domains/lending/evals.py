@@ -7,9 +7,11 @@ reduced to comparable keys:
 """
 
 import json
+import statistics
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 
 from kredpare.core.matching import DetectedBreak
 
@@ -94,6 +96,7 @@ class Label:
     difficulty: str
     wrong_side: str | None
     proposal: str
+    citations: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -115,6 +118,7 @@ def expected_labels(ground_truth_lines: Iterable[str]) -> dict[Key, Label]:
             difficulty=str(record["difficulty"]),
             wrong_side=None if side is None else str(side),
             proposal=str(record["expected_proposal"]),
+            citations=tuple(str(c) for c in record.get("expected_citations", ())),  # type: ignore[attr-defined]
         )
         labels.update((key, label) for key in _expand(record))
     return labels
@@ -200,4 +204,106 @@ def score_rules(labels: Mapping[Key, Label], verdicts: Mapping[Key, Verdict]) ->
         cause_difficulty,
         tuple(sorted(false_claims)),
         tuple(sorted(k for k in verdicts if k not in labels)),
+    )
+
+
+@dataclass(frozen=True)
+class WorkflowVerdict:
+    """What the workflow level did with one break that reached it."""
+
+    status: str
+    """explained or needs_investigation."""
+    cause: str | None
+    wrong_side: str | None
+    proposal: str | None
+    citations: tuple[str, ...]
+    llm_called: bool
+    cost_usd: Decimal
+    latency_seconds: float
+    invalid_output: bool
+
+
+@dataclass(frozen=True)
+class WorkflowScore:
+    medium_support: int
+    s4: float
+    """Medium breaks whose workflow cause is the ground truth cause."""
+    s5: float
+    """Medium breaks whose cited set equals expected_citations exactly."""
+    s5_superset: float
+    """Medium breaks whose citations include every expected citation (extra ones allowed)."""
+    wrong_side_accuracy: float
+    hard_support: int
+    s6: float
+    """Hard breaks that ended in needs_investigation."""
+    reached_workflow: int
+    llm_calls: int
+    short_circuited: int
+    total_cost: Decimal
+    cost_per_break: Decimal
+    """S7: total cost over the breaks that reached the workflow, short-circuited ones included."""
+    cost_per_call: Decimal
+    invalid_outputs: int
+    latency_p50: float
+    latency_p95: float
+    unlabeled: tuple[Key, ...]
+
+
+def _share(hits: int, total: int) -> float:
+    return hits / total if total else 0.0
+
+
+def _percentile(values: list[float], q: int) -> float:
+    if not values:
+        return 0.0
+    if len(values) == 1:
+        return values[0]
+    return statistics.quantiles(values, n=100, method="inclusive")[q - 1]
+
+
+def score_workflow(
+    labels: Mapping[Key, Label], verdicts: Mapping[Key, WorkflowVerdict]
+) -> WorkflowScore:
+    """Accuracy is over all medium breaks: one the workflow did not explain counts as wrong."""
+    medium = {k: v for k, v in labels.items() if v.difficulty == "medium"}
+    hard = {k: v for k, v in labels.items() if v.difficulty == "hard"}
+
+    def explained(key: Key) -> WorkflowVerdict | None:
+        verdict = verdicts.get(key)
+        return verdict if verdict is not None and verdict.status == "explained" else None
+
+    cause = exact = superset = side = 0
+    for key, label in medium.items():
+        verdict = explained(key)
+        if verdict is None:
+            continue
+        cause += verdict.cause == label.cause
+        exact += set(verdict.citations) == set(label.citations)
+        superset += set(label.citations) <= set(verdict.citations)
+        side += verdict.wrong_side == label.wrong_side
+    routed = sum(
+        1 for key in hard if (v := verdicts.get(key)) is not None and v.status != "explained"
+    )
+
+    called = [v for v in verdicts.values() if v.llm_called]
+    total = sum((v.cost_usd for v in verdicts.values()), Decimal(0))
+    latencies = [v.latency_seconds for v in called]
+    return WorkflowScore(
+        medium_support=len(medium),
+        s4=_share(cause, len(medium)),
+        s5=_share(exact, len(medium)),
+        s5_superset=_share(superset, len(medium)),
+        wrong_side_accuracy=_share(side, len(medium)),
+        hard_support=len(hard),
+        s6=_share(routed, len(hard)),
+        reached_workflow=len(verdicts),
+        llm_calls=len(called),
+        short_circuited=len(verdicts) - len(called),
+        total_cost=total,
+        cost_per_break=total / len(verdicts) if verdicts else Decimal(0),
+        cost_per_call=total / len(called) if called else Decimal(0),
+        invalid_outputs=sum(v.invalid_output for v in verdicts.values()),
+        latency_p50=_percentile(latencies, 50),
+        latency_p95=_percentile(latencies, 95),
+        unlabeled=tuple(sorted(k for k in verdicts if k not in labels)),
     )

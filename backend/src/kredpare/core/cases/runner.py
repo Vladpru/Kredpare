@@ -55,6 +55,9 @@ class WorkflowReport:
     cost_usd: Decimal = Decimal(0)
     """Cost of the calls of this run, including calls served from the cache at their original
     price."""
+    spent_usd: Decimal = Decimal(0)
+    """Money actually spent by this run: calls served from the cache cost nothing now."""
+    stopped_by_budget: bool = False
     outcomes: list[WorkflowOutcome] = field(default_factory=list[WorkflowOutcome])
 
 
@@ -84,7 +87,12 @@ def run_workflow_level(
     cache: ResponseCache | None = None,
     prices: dict[str, ModelPrice] | None = None,
     actor: str = "workflow",
+    max_spend_usd: Decimal | None = None,
 ) -> WorkflowReport:
+    """Explain every pending_workflow break; stop early once `max_spend_usd` is exceeded.
+
+    Breaks not reached stay pending_workflow, so a rerun continues where this one stopped.
+    """
     if domain.workflow is None:
         raise ValueError(f"domain {domain.name!r} has no workflow")
     spec = domain.workflow
@@ -94,6 +102,9 @@ def run_workflow_level(
             select(Break.id).where(Break.status == PENDING_WORKFLOW).order_by(Break.key)
         ).all()
     for break_id in ids:
+        if max_spend_usd is not None and totals.spent > max_spend_usd:
+            totals.stopped = True
+            break
         with Session(engine) as session:
             row = session.get(Break, break_id)
             if row is None or row.status != PENDING_WORKFLOW:
@@ -162,7 +173,8 @@ class _Totals:
     def __init__(self) -> None:
         self.explained = self.needs = self.unavailable = 0
         self.calls = self.cached = self.short = self.invalid = self.retries = 0
-        self.cost = Decimal(0)
+        self.cost = self.spent = Decimal(0)
+        self.stopped = False
         self.outcomes: list[WorkflowOutcome] = []
 
     def add(self, break_id: uuid.UUID, result: WorkflowResult) -> None:
@@ -176,6 +188,8 @@ class _Totals:
             self.cached += usage.cached
             self.retries += usage.retries
             self.cost += usage.cost_usd
+            if not usage.cached:
+                self.spent += usage.cost_usd
         else:
             self.short += 1
         if any(r.startswith(INVALID_OUTPUT_PREFIX) for r in result.reasons):
@@ -193,5 +207,7 @@ class _Totals:
             self.invalid,
             self.retries,
             self.cost,
+            self.spent,
+            self.stopped,
             self.outcomes,
         )
