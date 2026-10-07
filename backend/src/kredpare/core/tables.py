@@ -24,6 +24,9 @@ from kredpare.core.db import Base
 
 FILE_STATUSES = ("ingested", "unmapped", "rejected")
 MATCH_STATUSES = ("unmatched", "matched", "in_break")
+EXPLANATION_LEVELS = ("rule",)
+WRONG_SIDES = ("seller", "counterparty")
+PROPOSAL_KINDS = ("correction", "email")
 
 
 def _created_at() -> Mapped[datetime]:
@@ -122,6 +125,30 @@ class Break(Base):
     delta: Mapped[Decimal | None] = mapped_column(Numeric(20, 6))
     """right_value - left_value, for amount_mismatch."""
     status: Mapped[str] = mapped_column(Text, default="open")
+    created_at: Mapped[datetime] = _created_at()
+
+
+class ExplanationRow(Base):
+    """Why a break exists, per cascade level. One per break and level; never applied unreviewed."""
+
+    __tablename__ = "explanations"
+    __table_args__ = (
+        UniqueConstraint("break_id", "level"),
+        CheckConstraint(f"level IN {EXPLANATION_LEVELS}", name="level"),
+        CheckConstraint(f"wrong_side IN {WRONG_SIDES}", name="wrong_side"),
+        CheckConstraint(f"proposal IN {PROPOSAL_KINDS}", name="proposal"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    break_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("breaks.id"))
+    level: Mapped[str] = mapped_column(Text)
+    rule: Mapped[str] = mapped_column(Text)
+    cause: Mapped[str] = mapped_column(Text)
+    wrong_side: Mapped[str | None] = mapped_column(Text)
+    """None when nobody is wrong yet (a reminder)."""
+    proposal: Mapped[str] = mapped_column(Text)
+    evidence: Mapped[dict[str, Any]] = mapped_column(JSONB)
+    """JSON-safe: amounts and rates as exact decimal strings, dates as ISO strings."""
     created_at: Mapped[datetime] = _created_at()
 
 

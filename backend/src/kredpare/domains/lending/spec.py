@@ -2,7 +2,9 @@ from kredpare.core.domain import DomainSpec, MatchDeclaration, SchemaSpec
 from kredpare.domains.lending.break_types import BREAK_TYPES
 from kredpare.domains.lending.calendar import US_BANK_CALENDAR
 from kredpare.domains.lending.mappings import MAPPINGS
+from kredpare.domains.lending.rules import RULES
 from kredpare.domains.lending.schemas import FundedLoan, PurchaseConfirmation, ServicerOnboarding
+from kredpare.domains.lending.tools import QueryRecords
 
 LENDING = DomainSpec(
     name="lending",
@@ -35,6 +37,8 @@ LENDING = DomainSpec(
             age_from="settlement_date",
         ),
     ),
+    rules=RULES,
+    tools=(QueryRecords(),),
     mappings=MAPPINGS,
     calendar=US_BANK_CALENDAR,
     stale_after_business_days=5,

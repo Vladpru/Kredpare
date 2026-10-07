@@ -80,3 +80,5 @@ jobs:
         run: |
           uv run kredpare-datagen --seed 42 --out "$RUNNER_TEMP/dataset"
           uv run kredpare eval matching "$RUNNER_TEMP/dataset" --as-of 2026-09-08 --markdown
+      - name: Rule explanation eval (MVP S2, S3)
+        run: uv run kredpare eval rules "$RUNNER_TEMP/dataset" --as-of 2026-09-08 --markdown
