@@ -15,14 +15,14 @@ Fixed on 2026-10-05, before any measurement (`docs/MVP_PLAN.md`, issue #43). Tar
 
 | # | Criterion | Target | Measured | Met |
 |---|---|---|---|---|
-| S1 | Break detection precision and recall, every break type | ≥ 0.98 | | |
-| S2 | Share of simple breaks closed by rules | ≥ 0.90 | | |
-| S3 | Rules claiming a medium or hard break | 0 | | |
-| S4 | Medium breaks: workflow root cause accuracy | ≥ 0.80 | | |
-| S5 | Medium breaks: citation accuracy (amendment and section in force) | ≥ 0.80 | | |
-| S6 | Hard breaks routed to `needs_investigation` | ≥ 0.90 | | |
-| S7 | LLM cost per break reaching the workflow | ≤ $0.01 | | |
-| S8 | Reviewer goes from a break to approve/reject in the UI without a terminal | yes | | |
+| S1 | Break detection precision and recall, every break type | ≥ 0.98 | 1.000 (4 seeds) | yes |
+| S2 | Share of simple breaks closed by rules | ≥ 0.90 | 1.000 (5 seeds) | yes |
+| S3 | Rules claiming a medium or hard break | 0 | 0 (5 seeds) | yes |
+| S4 | Medium breaks: workflow root cause accuracy | ≥ 0.80 | 1.000 (seed 42, flash-lite) | yes |
+| S5 | Medium breaks: citation accuracy (amendment and section in force) | ≥ 0.80 | 0.943 exact set (seed 42, flash-lite) | yes |
+| S6 | Hard breaks routed to `needs_investigation` | ≥ 0.90 | 1.000, all by the code gate (ADR 0012) | yes |
+| S7 | LLM cost per break reaching the workflow | ≤ $0.01 | $0.000439 | yes |
+| S8 | Reviewer goes from a break to approve/reject in the UI without a terminal | yes | pending reviewer check | |
 
 S1–S3 are engineering gates; S4–S7 decide the hypothesis; S8 decides whether the product is demonstrable.
 
