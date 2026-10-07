@@ -276,3 +276,13 @@ def test_bad_decision_is_422_and_writes_nothing(
     assert response.status_code == 422
     with Session(engine) as s:
         assert s.scalar(select(func.count()).select_from(AuditEvent)) == 0
+
+
+def test_facets_list_distinct_sorted_values(client: TestClient) -> None:
+    body = client.get("/breaks/facets").json()
+    assert body == {
+        "counterparty_id": ["cp-a", "cp-b"],
+        "break_type": ["amount_mismatch", "missing_record"],
+        "status": ["explained", "pending_workflow"],
+        "level": ["rule"],
+    }

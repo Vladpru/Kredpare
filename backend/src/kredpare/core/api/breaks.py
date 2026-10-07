@@ -14,7 +14,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import ColumnElement, exists, func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from kredpare.core.audit import record_event
 from kredpare.core.db import get_sessionmaker
@@ -102,6 +102,15 @@ class BreakDetail(BreakSummary):
     decisions: list[DecisionOut]
 
 
+class Facets(BaseModel):
+    """Distinct values present in the data, for filter dropdowns."""
+
+    counterparty_id: list[str]
+    break_type: list[str]
+    status: list[str]
+    level: list[str]
+
+
 class DecisionIn(BaseModel):
     decision: Decision
     comment: str = Field(default="", max_length=2000)
@@ -158,6 +167,19 @@ def _summary(row: Break, explanation: ExplanationRow | None) -> dict[str, Any]:
         "rule": None if explanation is None else explanation.rule,
         "cause": None if explanation is None else explanation.cause,
     }
+
+
+@router.get("/facets", response_model=Facets)
+def facets(session: SessionDep) -> Facets:
+    def distinct(column: InstrumentedAttribute[str]) -> list[str]:
+        return list(session.scalars(select(column).distinct().order_by(column)))
+
+    return Facets(
+        counterparty_id=distinct(Break.counterparty_id),
+        break_type=distinct(Break.break_type),
+        status=distinct(Break.status),
+        level=distinct(ExplanationRow.level),
+    )
 
 
 @router.get("", response_model=BreakPage)
