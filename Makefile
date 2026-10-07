@@ -24,7 +24,7 @@ test:
 	$(DATAGEN) pytest
 
 api:
-	$(BACKEND) uvicorn kredpare.core.api.app:app --reload
+	$(BACKEND) uvicorn kredpare.api_main:app --reload
 
 worker:
 	# Threads pool: macOS starts prefork children with spawn, which breaks Celery's

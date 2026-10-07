@@ -14,6 +14,7 @@ import polars as pl
 from pydantic import BaseModel, ValidationError
 
 from kredpare.core.canonical import CanonicalRecord
+from kredpare.core.cases.workflow import WorkflowSpec
 from kredpare.core.mapping.config import MappingConfig
 from kredpare.core.rules.types import BreakView, Explanation, RuleContext
 
@@ -151,6 +152,8 @@ class DomainSpec:
     break_types: tuple[BreakType, ...]
     match_declarations: tuple[MatchDeclaration, ...]
     rules: tuple[Rule, ...] = field(default=())
+    workflow: WorkflowSpec | None = None
+    """The second cascade level: one LLM call that reads the agreements. Optional."""
     tools: tuple[Tool, ...] = field(default=())
     mappings: tuple[MappingConfig, ...] = field(default=())
     calendar: BusinessCalendar | None = None

@@ -5,6 +5,7 @@ from kredpare.domains.lending.mappings import MAPPINGS
 from kredpare.domains.lending.rules import RULES
 from kredpare.domains.lending.schemas import FundedLoan, PurchaseConfirmation, ServicerOnboarding
 from kredpare.domains.lending.tools import QueryRecords
+from kredpare.domains.lending.workflow import LendingWorkflowSpec
 
 LENDING = DomainSpec(
     name="lending",
@@ -38,6 +39,7 @@ LENDING = DomainSpec(
         ),
     ),
     rules=RULES,
+    workflow=LendingWorkflowSpec(),
     tools=(QueryRecords(),),
     mappings=MAPPINGS,
     calendar=US_BANK_CALENDAR,

@@ -20,3 +20,6 @@ htmlcov/
 
 # Generated synthetic data (kredpare-datagen)
 data/
+
+# Workflow LLM reply cache (local, reproducible)
+.cache/

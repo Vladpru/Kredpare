@@ -24,7 +24,7 @@ from kredpare.core.db import Base
 
 FILE_STATUSES = ("ingested", "unmapped", "rejected")
 MATCH_STATUSES = ("unmatched", "matched", "in_break")
-EXPLANATION_LEVELS = ("rule",)
+EXPLANATION_LEVELS = ("rule", "workflow")
 WRONG_SIDES = ("seller", "counterparty")
 PROPOSAL_KINDS = ("correction", "email")
 
