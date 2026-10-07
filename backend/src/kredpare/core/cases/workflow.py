@@ -324,7 +324,7 @@ def record_workflow_call(
     record_event(
         session,
         actor,
-        "workflow_explained",
+        "workflow_llm_call",
         "break",
         break_id,
         audit_payload(result),

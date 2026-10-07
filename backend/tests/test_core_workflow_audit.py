@@ -76,7 +76,7 @@ def test_record_workflow_call_writes_an_audit_event(engine: Engine) -> None:
     with Session(engine) as session:
         event = session.scalars(select(AuditEvent)).one()
         assert (event.action, event.entity_type, event.entity_id) == (
-            "workflow_explained",
+            "workflow_llm_call",
             "break",
             "brk-1",
         )
