@@ -33,7 +33,7 @@ Rules row from MVP M2, Workflow row from M3, Agent row from post-MVP P5. This is
 | Level | Share closed — simple | medium | hard | Accuracy | Cost / break | p50 / p95 | Dataset | Commit |
 |---|---|---|---|---|---|---|---|---|
 | Rules | 1.000 (62/62) | 0.000 (0/70) | 0.000 (0/146) | cause 1.000, wrong side 1.000, proposal 1.000 (62 explained) | $0 | | seed 42, 30 days, 40 loans per batch, 278 labeled breaks | `afaf43b` | |
-| Workflow | | | | | | | | |
+| Workflow | — | 1.000 (70/70) | 0.000 (146 → `needs_investigation`) | S4 1.000, S5 0.943 | $0.000439 | 5.97 / 26.60 | seed 42, gemini-3.5-flash-lite | `53bc5c4` |
 | Agent | | | | | | | | |
 | Escalated | | | | — | — | — | | |
 
@@ -106,7 +106,7 @@ The long context row is measured in MVP M3.
 | vector only | | | | | | |
 | hybrid (RRF) | | | | | | |
 | hybrid + rerank | | | | | | |
-| long context (no RAG) | | | | | | |
+| long context (no RAG) | — | — | 5.97 / 26.60 | $0.001353 / call | seed 42, gemini-3.5-flash-lite, citation accuracy 0.943 | `53bc5c4` |
 
 ## MVP M3 — workflow explainer
 
@@ -114,8 +114,8 @@ Run on both models; the model choice is an eval result.
 
 | Model | Root cause accuracy | Citation correctness | `needs_investigation` rate on hard | Cost / break | Dataset | Commit |
 |---|---|---|---|---|---|---|
-| gemini-3.5-flash-lite | | | | | | |
-| gemini-3.5-flash | | | | | | |
+| gemini-3.5-flash-lite | 1.000 | 0.943 (exact set; 0.986 expected-cited) | 1.000 | $0.000439 | kredpare-datagen --days 30, seed 42 (70 medium, 146 hard) | `53bc5c4` |
+| gemini-3.5-flash | | | | | pending: run did not finish before this PR | |
 
 ## Post-MVP P5 — workflow vs agent on the hard set
 
@@ -131,3 +131,10 @@ Append one line per recorded change: date, table, what changed, why.
 - 2026-10-05 · MVP success criteria · targets S1–S8 fixed and section headings moved to the MVP and post-MVP plans · ADR 0008, issue #43.
 - 2026-10-05 · MVP M1 break detection · first measurement, 1.000 on seeds 42, 7, 1234, 2026 · commit 1499a43.
 - 2026-10-05 · MVP M2 rules · first measurement, S2 1.000 and S3 0 on seeds 42, 7, 1234, 2026; cascade Rules row filled · commit afaf43b · ADR 0010.
+
+### MVP M3 notes (seed 42, gemini-3.5-flash-lite)
+
+- 216 breaks reached the workflow: 70 called the LLM (all medium), 146 hard breaks were short-circuited by code because no clause-supported candidate reproduces the counterparty value. S6 = 1.000 is therefore a property of the code gate, not of the model.
+- Total spend $0.0947 ($0.001353 per call); 0 invalid outputs, 2 retries, 0 unavailable.
+- Wrong-side accuracy on medium: 1.000. Rule level unchanged: S2 1.000, S3 0.
+- Precomputed candidates make root-cause selection easy (S4 1.000); citations are where the model errs (S5 0.943 exact set).
