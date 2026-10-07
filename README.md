@@ -87,6 +87,20 @@ curl localhost:8000/health
 
 Stop the containers with `make down`.
 
+## Demo
+
+After "1. Install dependencies" and "2. Configure `.env`" above:
+
+```bash
+make demo
+```
+
+This starts the containers, then `scripts/demo.sh` creates a separate database (`kredpare_demo`, same server as `DATABASE_URL`; your dev database is not touched), migrates it, writes synthetic data (seed 42) to `data/demo`, runs `kredpare ingest`, `kredpare match --as-of 2026-09-08` and `kredpare explain`, and starts the API (http://localhost:8000) and the web app (http://localhost:3000). Open `/breaks`, pick a break, and approve or reject it. A decision is only recorded in `audit_events`; nothing is applied or sent. Stop with Ctrl-C. Rerunning is safe: the data is not duplicated and earlier decisions stay. To start over, drop the database: `docker compose exec postgres psql -U kredpare -c 'DROP DATABASE kredpare_demo'`.
+
+`kredpare explain` runs the rule level. Once the LLM workflow level lands it also calls the model and needs an API key; a `--no-workflow` option is planned so that `make demo` still works without one.
+
+The web app reads the API address from `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`). The API allows the origins in `KREDPARE_CORS_ORIGINS` (comma separated, default `http://localhost:3000`). After changing the API, regenerate the web types with `(cd web && pnpm gen:api)`.
+
 ## Development
 
 ```bash

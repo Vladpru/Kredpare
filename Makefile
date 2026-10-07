@@ -1,4 +1,4 @@
-.PHONY: up down check test api worker beat
+.PHONY: up down check test api worker beat demo
 
 BACKEND := uv run --directory backend
 DATAGEN := uv run --directory datagen
@@ -33,3 +33,7 @@ worker:
 
 beat:
 	$(BACKEND) celery -A kredpare.core.worker beat --loglevel=info --schedule=/tmp/kredpare-celerybeat-schedule
+
+# Seeds a separate demo database (see scripts/demo.sh), then runs the API and the web app.
+demo: up
+	./scripts/demo.sh
