@@ -19,32 +19,52 @@ class LLMResult[T: BaseModel]:
     input_tokens: int
     output_tokens: int
     latency_seconds: float
+    retries: int = 0
+    """Requests repeated after a 429, 5xx, or connection error."""
 
 
 class InvalidModelOutput(Exception):
     """The model replied, but not with JSON that validates against the schema. Never repaired."""
 
     def __init__(
-        self, detail: str, *, input_tokens: int, output_tokens: int, latency_seconds: float
+        self,
+        detail: str,
+        *,
+        input_tokens: int,
+        output_tokens: int,
+        latency_seconds: float,
+        retries: int = 0,
     ) -> None:
         super().__init__(detail)
         self.detail = detail
+        self.retries = retries
         self.input_tokens = input_tokens
         self.output_tokens = output_tokens
         self.latency_seconds = latency_seconds
+
+
+class LLMUnavailable(Exception):
+    """The provider could not be reached or kept failing after the retry cap.
+
+    Not a verdict on the break: the caller leaves the break as it was and can rerun later.
+    """
+
+    def __init__(self, detail: str, *, retries: int) -> None:
+        super().__init__(detail)
+        self.retries = retries
 
 
 class LLMClient(Protocol):
     def complete[S: BaseModel](
         self, *, model: str, system: str, user: str, schema: type[S]
     ) -> LLMResult[S]:
-        """One call. Raises InvalidModelOutput when the reply does not validate."""
+        """One call. InvalidModelOutput for a bad reply, LLMUnavailable when retries run out."""
         ...
 
 
 @dataclass(frozen=True)
 class ModelPrice:
-    """USD per million tokens. Input is the cache-miss price; cache hits are not discounted."""
+    """USD per million tokens, paid tier. Prompt-cache discounts are not applied."""
 
     input_per_million: Decimal
     output_per_million: Decimal
@@ -52,15 +72,15 @@ class ModelPrice:
     checked_on: str
 
 
-_DEEPSEEK_PRICING = "https://api-docs.deepseek.com/quick_start/pricing"
+_GEMINI_PRICING = "https://ai.google.dev/gemini-api/docs/pricing"
 
-# DeepSeek publishes a peak and an off-peak (half) rate. The peak rate is used, so recorded
-# cost is an upper bound.
+# Gemini API paid tier, Standard, text input; output includes thinking tokens. Both models have
+# a free tier (rate-limited); the paid rate is recorded so the cost is what production would pay.
 MODEL_PRICES: dict[str, ModelPrice] = {
-    "deepseek-flash": ModelPrice(Decimal("0.30"), Decimal("1.20"), _DEEPSEEK_PRICING, "2026-10-05"),
-    "deepseek-v4-pro": ModelPrice(
-        Decimal("1.32"), Decimal("3.96"), _DEEPSEEK_PRICING, "2026-10-05"
+    "gemini-3.5-flash-lite": ModelPrice(
+        Decimal("0.30"), Decimal("2.50"), _GEMINI_PRICING, "2026-10-07"
     ),
+    "gemini-3.5-flash": ModelPrice(Decimal("1.50"), Decimal("9.00"), _GEMINI_PRICING, "2026-10-07"),
 }
 
 

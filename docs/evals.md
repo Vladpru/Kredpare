@@ -114,8 +114,8 @@ Run on both models; the model choice is an eval result.
 
 | Model | Root cause accuracy | Citation correctness | `needs_investigation` rate on hard | Cost / break | Dataset | Commit |
 |---|---|---|---|---|---|---|
-| deepseek-flash | | | | | | |
-| deepseek-v4-pro | | | | | | |
+| gemini-3.5-flash-lite | | | | | | |
+| gemini-3.5-flash | | | | | | |
 
 ## Post-MVP P5 — workflow vs agent on the hard set
 

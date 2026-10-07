@@ -116,6 +116,8 @@ class WorkflowUsage:
     cached: bool
     """True when served from the local cache: tokens, cost, and latency are those of the
     original call, and nothing was spent now."""
+    retries: int = 0
+    """Requests repeated after a 429, 5xx, or connection error."""
     llm_called: bool = True
     """False when code decided without asking the model: tokens, cost, and latency are zero."""
 
@@ -179,13 +181,15 @@ def run_workflow(
             [NO_SUPPORTED_CANDIDATE],
             None,
             candidates,
-            WorkflowUsage(model, spec.prompt_version, 0, 0, Decimal(0), 0.0, False, False),
+            WorkflowUsage(model, spec.prompt_version, 0, 0, Decimal(0), 0.0, False, 0, False),
             "",
         )
     prompt = spec.render_prompt(brk, documents, candidates)
     key = input_hash(model, spec.prompt_version, prompt)
 
-    def usage(input_tokens: int, output_tokens: int, latency: float, cached: bool) -> WorkflowUsage:
+    def usage(
+        input_tokens: int, output_tokens: int, latency: float, retries: int, cached: bool
+    ) -> WorkflowUsage:
         return WorkflowUsage(
             model=model,
             prompt_version=spec.prompt_version,
@@ -194,6 +198,7 @@ def run_workflow(
             cost_usd=cost_usd(model, input_tokens, output_tokens, price_table),
             latency_seconds=latency,
             cached=cached,
+            retries=retries,
         )
 
     def result(
@@ -213,11 +218,15 @@ def run_workflow(
             model=model, system=prompt.system, user=prompt.user, schema=WorkflowExplanation
         )
     except InvalidModelOutput as exc:
-        call_usage = usage(exc.input_tokens, exc.output_tokens, exc.latency_seconds, False)
+        call_usage = usage(
+            exc.input_tokens, exc.output_tokens, exc.latency_seconds, exc.retries, False
+        )
         _store(cache, key, None, exc.detail, call_usage)
         return result(None, call_usage, exc.detail)
 
-    call_usage = usage(reply.input_tokens, reply.output_tokens, reply.latency_seconds, False)
+    call_usage = usage(
+        reply.input_tokens, reply.output_tokens, reply.latency_seconds, reply.retries, False
+    )
     _store(cache, key, reply.parsed, None, call_usage)
     return result(reply.parsed, call_usage, None)
 
@@ -240,6 +249,7 @@ def _store(
                 call_usage.input_tokens,
                 call_usage.output_tokens,
                 call_usage.latency_seconds,
+                call_usage.retries,
             ],
         },
     )

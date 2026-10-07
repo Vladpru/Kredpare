@@ -3,9 +3,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+import pytest
 from pydantic import BaseModel
 
-from kredpare.core.cases.llm import InvalidModelOutput, LLMResult, ModelPrice
+from kredpare.core.cases.llm import InvalidModelOutput, LLMResult, LLMUnavailable, ModelPrice
 from kredpare.core.cases.workflow import (
     ResponseCache,
     WorkflowBreak,
@@ -23,7 +24,7 @@ SPEC = LendingWorkflowSpec()
 
 
 class FakeLLM:
-    def __init__(self, reply: WorkflowExplanation | InvalidModelOutput) -> None:
+    def __init__(self, reply: WorkflowExplanation | InvalidModelOutput | LLMUnavailable) -> None:
         self.reply = reply
         self.calls: list[dict[str, str]] = []
 
@@ -31,7 +32,7 @@ class FakeLLM:
         self, *, model: str, system: str, user: str, schema: type[S]
     ) -> LLMResult[S]:
         self.calls.append({"model": model, "system": system, "user": user})
-        if isinstance(self.reply, InvalidModelOutput):
+        if isinstance(self.reply, InvalidModelOutput | LLMUnavailable):
             raise self.reply
         assert isinstance(self.reply, schema)
         return LLMResult(self.reply, input_tokens=2000, output_tokens=100, latency_seconds=0.5)
@@ -299,3 +300,12 @@ def test_usage_cost_is_decimal_from_the_price_table() -> None:
     assert isinstance(result.usage.cost_usd, Decimal)
     assert result.usage.model == MODEL
     assert result.usage.prompt_version == "lending-workflow-v1"
+
+
+def test_unavailable_provider_propagates_and_is_not_cached(tmp_path: Path) -> None:
+    cache = ResponseCache(tmp_path / "cache")
+
+    with pytest.raises(LLMUnavailable):
+        _run(_brackwater_break(), FakeLLM(LLMUnavailable("down", retries=3)), cache=cache)
+
+    assert not (tmp_path / "cache").exists()
