@@ -1,44 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { listBreaks, type BreakPage, type ListQuery } from "@/lib/api";
+import { getFacets, listBreaks, type BreakPage, type Facets, type ListQuery } from "@/lib/api";
 
 const PAGE_SIZE = 25;
 
-const FILTERS: { key: "counterparty_id" | "break_type" | "status" | "level"; label: string }[] = [
+const FILTERS = [
   { key: "counterparty_id", label: "Counterparty" },
   { key: "break_type", label: "Break type" },
   { key: "status", label: "Status" },
-  { key: "level", label: "Level (or none)" },
-];
+  { key: "level", label: "Level" },
+] as const;
 
-export default function BreaksPage() {
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [offset, setOffset] = useState(0);
-  const [page, setPage] = useState<BreakPage | null>(null);
-  const [error, setError] = useState<string | null>(null);
+function BreaksView() {
+  const router = useRouter();
+  const search = useSearchParams();
+  const [facets, setFacets] = useState<Facets | null>(null);
+  // The result is tagged with the query it answers, so a stale one reads as loading.
+  const [result, setResult] = useState<{
+    key: string;
+    page?: BreakPage;
+    error?: string;
+  } | null>(null);
+
+  const filters = Object.fromEntries(
+    FILTERS.map(({ key }) => [key, search.get(key) ?? ""]),
+  ) as Record<(typeof FILTERS)[number]["key"], string>;
+  const offset = Math.max(0, Number(search.get("offset")) || 0);
+  const queryKey = search.toString();
+  const settled = result?.key === queryKey ? result : null;
+  const page = settled?.page ?? null;
+  const error = settled?.error ?? null;
+
+  useEffect(() => {
+    getFacets()
+      .then(setFacets)
+      .catch(() => setFacets(null));
+  }, []);
 
   useEffect(() => {
     let current = true;
-    const timer = setTimeout(() => {
-      setError(null);
-      setPage(null);
-      listBreaks({ ...(filters as ListQuery), limit: PAGE_SIZE, offset })
-        .then((result) => current && setPage(result))
-        .catch((e: Error) => current && setError(e.message));
-    }, 250);
+    listBreaks({ ...(filters as ListQuery), limit: PAGE_SIZE, offset })
+      .then((page) => current && setResult({ key: queryKey, page }))
+      .catch((e: Error) => current && setResult({ key: queryKey, error: e.message }));
     return () => {
       current = false;
-      clearTimeout(timer);
     };
-  }, [filters, offset]);
+    // queryKey covers every filter and the offset.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryKey]);
 
-  function setFilter(key: string, value: string) {
-    setOffset(0);
-    setFilters((previous) => ({ ...previous, [key]: value }));
+  function update(changes: Record<string, string>) {
+    const next = new URLSearchParams(search.toString());
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    router.replace(`/breaks${next.size ? `?${next}` : ""}`);
+  }
+
+  function options(key: (typeof FILTERS)[number]["key"]): string[] {
+    const values = facets?.[key] ?? [];
+    // "none" lets the reviewer find breaks that no level has explained yet.
+    return key === "level" ? ["none", ...values] : values;
   }
 
   return (
@@ -48,11 +76,18 @@ export default function BreaksPage() {
         {FILTERS.map(({ key, label }) => (
           <label key={key} className="flex flex-col gap-1 text-xs text-muted-foreground">
             {label}
-            <input
+            <select
               className="rounded-md border bg-background px-2 py-1 text-sm text-foreground"
-              value={filters[key] ?? ""}
-              onChange={(e) => setFilter(key, e.target.value.trim())}
-            />
+              value={filters[key]}
+              onChange={(e) => update({ [key]: e.target.value, offset: "" })}
+            >
+              <option value="">All</option>
+              {options(key).map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
           </label>
         ))}
       </div>
@@ -106,7 +141,7 @@ export default function BreaksPage() {
             <Button
               variant="outline"
               disabled={offset === 0}
-              onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+              onClick={() => update({ offset: String(Math.max(0, offset - PAGE_SIZE) || "") })}
             >
               Previous
             </Button>
@@ -116,7 +151,7 @@ export default function BreaksPage() {
             <Button
               variant="outline"
               disabled={offset + PAGE_SIZE >= page.total}
-              onClick={() => setOffset(offset + PAGE_SIZE)}
+              onClick={() => update({ offset: String(offset + PAGE_SIZE) })}
             >
               Next
             </Button>
@@ -124,5 +159,13 @@ export default function BreaksPage() {
         </>
       )}
     </main>
+  );
+}
+
+export default function BreaksPage() {
+  return (
+    <Suspense fallback={<p className="p-6 text-sm text-muted-foreground">Loading...</p>}>
+      <BreaksView />
+    </Suspense>
   );
 }

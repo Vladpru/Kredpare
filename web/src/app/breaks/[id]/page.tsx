@@ -8,34 +8,50 @@ import { decide, getBreak, type BreakDetail } from "@/lib/api";
 
 type RecordData = NonNullable<BreakDetail["left_record"]>;
 
-function RecordCard({
-  title,
-  record,
-  mismatchField,
-}: {
-  title: string;
-  record: RecordData | null;
-  mismatchField: string | null | undefined;
-}) {
+function isKey(name: string): boolean {
+  return name === "id" || name.endsWith("_id");
+}
+
+/** Identifier fields first, then the compared field, then the rest, each group sorted. */
+function fieldOrder(left: RecordData | null, right: RecordData | null, compared: string | null) {
+  const names = new Set([...Object.keys(left?.data ?? {}), ...Object.keys(right?.data ?? {})]);
+  const rank = (name: string) => (isKey(name) ? 0 : name === compared ? 1 : 2);
+  return [...names].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
+function ComparisonTable({ detail }: { detail: BreakDetail }) {
+  const { left_record: left, right_record: right, field } = detail;
+  const cell = (record: RecordData | null, name: string) => record?.data[name] ?? "—";
   return (
     <section className="rounded-lg border p-4">
-      <h2 className="mb-2 text-sm font-medium">{title}</h2>
-      {record ? (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          {Object.entries(record.data).map(([key, value]) => (
-            <div
-              key={key}
-              className={`col-span-2 grid grid-cols-subgrid ${
-                key === mismatchField ? "rounded bg-amber-100 px-1 font-semibold dark:bg-amber-900/40" : ""
-              }`}
+      <table className="w-full text-left text-sm">
+        <thead className="border-b text-xs text-muted-foreground">
+          <tr>
+            <th className="py-1 pr-3 font-normal">Field</th>
+            <th className="pr-3 font-normal">Left: {detail.left_schema}</th>
+            <th className="font-normal">Right: {detail.right_schema ?? "—"}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fieldOrder(left, right, field).map((name) => (
+            <tr
+              key={name}
+              className={name === field ? "bg-amber-100 font-semibold dark:bg-amber-900/40" : ""}
             >
-              <dt className="text-muted-foreground">{key}</dt>
-              <dd className="font-mono">{value ?? "-"}</dd>
-            </div>
+              <td className="py-1 pr-3 text-muted-foreground">{name}</td>
+              <td className="pr-3 font-mono">{cell(left, name)}</td>
+              <td className="font-mono">{cell(right, name)}</td>
+            </tr>
           ))}
-        </dl>
-      ) : (
-        <p className="text-sm text-muted-foreground">No record on this side.</p>
+        </tbody>
+      </table>
+      {!left && !right && (
+        <p className="text-sm text-muted-foreground">No records stored for this break.</p>
+      )}
+      {(!left || !right) && (left || right) && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          No record on the {left ? "right" : "left"} side.
+        </p>
       )}
     </section>
   );
@@ -118,18 +134,7 @@ export default function BreakPage({ params }: PageProps<"/breaks/[id]">) {
         )}
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <RecordCard
-          title={`Left: ${detail.left_schema}`}
-          record={detail.left_record}
-          mismatchField={detail.field}
-        />
-        <RecordCard
-          title={`Right: ${detail.right_schema ?? "-"}`}
-          record={detail.right_record}
-          mismatchField={detail.field}
-        />
-      </div>
+      <ComparisonTable detail={detail} />
 
       <section className="rounded-lg border p-4">
         <h2 className="mb-2 text-sm font-medium">Explanation</h2>

@@ -3,6 +3,7 @@ import type { components, paths } from "@/lib/api-schema";
 export type BreakPage = components["schemas"]["BreakPage"];
 export type BreakSummary = components["schemas"]["BreakSummary"];
 export type BreakDetail = components["schemas"]["BreakDetail"];
+export type Facets = components["schemas"]["Facets"];
 export type DecisionOut = components["schemas"]["DecisionOut"];
 export type DecisionIn = components["schemas"]["DecisionIn"];
 export type ListQuery = NonNullable<paths["/breaks"]["get"]["parameters"]["query"]>;
@@ -43,4 +44,8 @@ export function decide(
     headers: { "Content-Type": "application/json", "X-Reviewer": reviewer },
     body: JSON.stringify(body),
   });
+}
+
+export function getFacets(): Promise<Facets> {
+  return request<Facets>("/breaks/facets");
 }

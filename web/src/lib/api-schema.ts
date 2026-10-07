@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/breaks/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Facets */
+        get: operations["facets_breaks_facets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/breaks": {
         parameters: {
             query?: never;
@@ -233,6 +250,20 @@ export interface components {
             /** Citations */
             citations: components["schemas"]["CitationOut"][];
         };
+        /**
+         * Facets
+         * @description Distinct values present in the data, for filter dropdowns.
+         */
+        Facets: {
+            /** Counterparty Id */
+            counterparty_id: string[];
+            /** Break Type */
+            break_type: string[];
+            /** Status */
+            status: string[];
+            /** Level */
+            level: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -312,6 +343,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    facets_breaks_facets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Facets"];
                 };
             };
         };
