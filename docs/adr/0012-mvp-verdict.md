@@ -1,6 +1,6 @@
 # 0012. Continue with the post-MVP plan, with changes to evaluation
 
-- **Status:** Proposed. It becomes Accepted when the reviewer checks S8 and the user confirms the decision.
+- **Status:** Accepted (S8 checked by the owner on 2026-10-07)
 - **Date:** 2026-10-07
 - **Iteration:** MVP M4
 
@@ -19,7 +19,7 @@ Dataset: `kredpare-datagen --days 30`, window 2026-08-10 to 2026-09-08, 40 loans
 | S5 | Medium: citation accuracy | ≥ 0.80 | 0.943 exact citation set, 0.986 expected citation present | yes |
 | S6 | Hard routed to `needs_investigation` | ≥ 0.90 | 1.000 (146 breaks) | yes, see caveat 1 |
 | S7 | LLM cost per break reaching the workflow | ≤ $0.01 | $0.000439 (216 breaks, 70 LLM calls, $0.095 total) | yes |
-| S8 | Reviewer goes from a break to approve/reject in the UI | yes | Not checked yet: the reviewer must run `make demo` and confirm | pending |
+| S8 | Reviewer goes from a break to approve/reject in the UI | yes | yes: the owner reviewed and decided a break in the UI via `make demo` | yes |
 
 ## What worked
 
@@ -61,6 +61,6 @@ Continue with `POST_MVP_PLAN.md`, with changes. The hypothesis holds on syntheti
 - **Positive:** the cascade, audit and approval design is validated end to end. The review UI and `make demo` give a working demonstration.
 - **Negative / cost:** about one extra iteration of eval work (adversarial set, model comparison, citation analysis) before P5.
 - **Follow-up:**
-  - The reviewer checks S8 and records it in `docs/evals.md`. This ADR then becomes Accepted.
+  - `make demo` gives no progress output while the workflow level runs (about 10 minutes on the Gemini free tier). Print progress, and make the LLM level opt-in for the demo.
   - Add the eval-hardening items to `POST_MVP_PLAN.md`.
   - Revisit this decision if the adversarial hard set drops S6 below 0.90, or if the second model or seed drops S4 or S5 below 0.80.

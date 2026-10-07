@@ -22,7 +22,7 @@ Fixed on 2026-10-05, before any measurement (`docs/MVP_PLAN.md`, issue #43). Tar
 | S5 | Medium breaks: citation accuracy (amendment and section in force) | ≥ 0.80 | 0.943 exact set (seed 42, flash-lite) | yes |
 | S6 | Hard breaks routed to `needs_investigation` | ≥ 0.90 | 1.000, all by the code gate (ADR 0012) | yes |
 | S7 | LLM cost per break reaching the workflow | ≤ $0.01 | $0.000439 | yes |
-| S8 | Reviewer goes from a break to approve/reject in the UI without a terminal | yes | pending reviewer check | |
+| S8 | Reviewer goes from a break to approve/reject in the UI without a terminal | yes | yes (owner, `make demo`, 2026-10-07) | yes |
 
 S1–S3 are engineering gates; S4–S7 decide the hypothesis; S8 decides whether the product is demonstrable.
 
