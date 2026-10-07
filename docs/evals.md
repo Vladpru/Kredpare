@@ -32,7 +32,7 @@ Rules row from MVP M2, Workflow row from M3, Agent row from post-MVP P5. This is
 
 | Level | Share closed — simple | medium | hard | Accuracy | Cost / break | p50 / p95 | Dataset | Commit |
 |---|---|---|---|---|---|---|---|---|
-| Rules | | | | | | | | |
+| Rules | 1.000 (62/62) | 0.000 (0/70) | 0.000 (0/146) | cause 1.000, wrong side 1.000, proposal 1.000 (62 explained) | $0 | | seed 42, 30 days, 40 loans per batch, 278 labeled breaks | `afaf43b` | |
 | Workflow | | | | | | | | |
 | Agent | | | | | | | | |
 | Escalated | | | | — | — | — | | |
@@ -52,6 +52,44 @@ Command: `kredpare eval matching <dir> --as-of 2026-09-08` (ingest and matching 
 | `stale_pending` | 1.000 | 1.000 | 40 / 40 / 40 / 40 |
 
 Precision and recall are identical on all four seeds. Note: matching is deterministic and the data is synthetic, so 1.000 shows the engine and the generator agree on break semantics (ADR 0009); it says nothing yet about messy real files. CI runs this eval on seed 42 and fails below 0.98.
+
+## MVP M2 — rules
+
+Targets: S2 (share of simple breaks closed by rules) ≥ 0.90 and S3 (rules claiming a medium or hard break) = 0, on seed 42 and seeds 7, 1234, 2026.
+
+Command: `kredpare eval rules <dir> --as-of 2026-09-08 --markdown` (ingest, matching, and the rule level in a temporary database; exits non-zero if S2 < 0.90 or S3 > 0). Dataset: `kredpare-datagen --days 30`, window 2026-08-10 to 2026-09-08, 40 loans per batch. Commit `afaf43b`. Semantics: ADR 0010.
+
+"Breaks" are ground-truth breaks expanded as `loan_ids × fields` (one per loan for missing, duplicate, and stale records). "Explained" means a rule explanation was stored. Accuracy is measured among explained breaks only; `-` means nothing was explained.
+
+| Cause | Difficulty | Explained / breaks (seed 42 / 7 / 1234 / 2026) | Cause acc. | Wrong side acc. | Proposal acc. |
+|---|---|---|---|---|---|
+| `loan_not_confirmed` | simple | 3/3 · 3/3 · 3/3 · 3/3 | 1.000 | 1.000 | 1.000 |
+| `loan_not_offered` | simple | 2/2 · 2/2 · 2/2 · 2/2 | 1.000 | 1.000 | 1.000 |
+| `duplicate_row` | simple | 2/2 · 2/2 · 2/2 · 2/2 | 1.000 | 1.000 | 1.000 |
+| `confirmation_overdue` | simple | 40/40 · 40/40 · 40/40 · 40/40 | 1.000 | 1.000 | 1.000 |
+| `settlement_date_roll` | simple | 3/3 · 3/3 · 3/3 · 3/3 | 1.000 | 1.000 | 1.000 |
+| `rounding_difference` | simple | 6/6 · 6/6 · 6/6 · 6/6 | 1.000 | 1.000 | 1.000 |
+| `accrual_start_alternative` | simple | 6/6 · 6/6 · 6/6 · 6/6 | 1.000 | 1.000 | 1.000 |
+| `accrued_interest_error` | medium | 0/8 · 0/8 · 0/8 · 0/8 | - | - | - |
+| `price_grid_amendment` | medium | 0/62 · 0/66 · 0/78 · 0/68 | - | - | - |
+| `combined_causes` | hard | 0/6 · 0/6 · 0/6 · 0/6 | - | - | - |
+| `dealer_wide_adjustment` | hard | 0/6 · 0/12 · 0/8 · 0/16 | - | - | - |
+| `unannounced_rule_change` | hard | 0/134 · 0/128 · 0/136 · 0/136 | - | - | - |
+
+| Seed | Simple explained (S2) | Medium explained | Hard explained | S3 (medium + hard explained) |
+|---|---|---|---|---|
+| 42 | 62/62 = 1.000 | 0/70 | 0/146 | 0 |
+| 7 | 62/62 = 1.000 | 0/74 | 0/146 | 0 |
+| 1234 | 62/62 = 1.000 | 0/86 | 0/150 | 0 |
+| 2026 | 62/62 = 1.000 | 0/76 | 0/158 | 0 |
+
+Both targets are met on all four seeds. Notes:
+
+- The simple support is the same on every seed because the injection plan fixes the number of loans per simple cause; only medium and hard supports vary with the seed.
+- 1.000 shows the rules and the generator agree on cause semantics; the rules were written against the taxonomy, not tuned to any seed. It says nothing about messy real files.
+- Rules never read agreements (ADR 0010). `combined_causes` and `accrued_interest_error` loans are left unexplained by design; that is what keeps S3 at 0.
+- CI runs this eval on seed 42 and fails below S2 0.90 or above S3 0.
+- Latency was not measured; rules run in memory over stored records.
 
 ## Post-MVP P2 — LLM schema mapping
 
@@ -92,3 +130,4 @@ Append one line per recorded change: date, table, what changed, why.
 
 - 2026-10-05 · MVP success criteria · targets S1–S8 fixed and section headings moved to the MVP and post-MVP plans · ADR 0008, issue #43.
 - 2026-10-05 · MVP M1 break detection · first measurement, 1.000 on seeds 42, 7, 1234, 2026 · commit 1499a43.
+- 2026-10-05 · MVP M2 rules · first measurement, S2 1.000 and S3 0 on seeds 42, 7, 1234, 2026; cascade Rules row filled · commit afaf43b · ADR 0010.

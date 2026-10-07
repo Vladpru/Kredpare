@@ -15,13 +15,23 @@ from pydantic import BaseModel, ValidationError
 
 from kredpare.core.canonical import CanonicalRecord
 from kredpare.core.mapping.config import MappingConfig
+from kredpare.core.rules.types import BreakView, Explanation, RuleContext
 
 
 class Rule(Protocol):
-    """A deterministic break explanation. Its call signature lands with the rule runner."""
+    """A deterministic break explanation: no LLM, exact or nothing."""
 
     @property
     def name(self) -> str: ...
+
+    @property
+    def break_types(self) -> tuple[str, ...]:
+        """The break types this rule is asked about."""
+        ...
+
+    def explain(self, brk: BreakView, context: RuleContext) -> Explanation | None:
+        """An explanation only when the rule's condition holds exactly; otherwise None."""
+        ...
 
 
 class BusinessCalendar(Protocol):

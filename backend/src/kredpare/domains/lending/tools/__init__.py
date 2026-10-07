@@ -5,8 +5,9 @@ from decimal import Decimal
 
 from kredpare.domains.lending import pricing
 from kredpare.domains.lending.pricing import DayCount, Rounding
+from kredpare.domains.lending.tools.query_records import QueryRecords
 
-__all__ = ["calc_accrued_interest", "recompute_purchase_price"]
+__all__ = ["QueryRecords", "calc_accrued_interest", "recompute_purchase_price"]
 
 
 def calc_accrued_interest(
