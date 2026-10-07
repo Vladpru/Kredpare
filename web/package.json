@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "gen:api": "uv run --directory ../backend python -c \"import json; from kredpare.core.api.app import app; print(json.dumps(app.openapi()))\" | openapi-typescript -o src/lib/api-schema.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -27,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
