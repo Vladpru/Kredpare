@@ -57,7 +57,7 @@ class Candidate:
     parameters: dict[str, str]
     supported_by: list[str]
     reproduces_counterparty_value: bool
-    reproduces_company_value: bool
+    reproduces_seller_value: bool
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -67,7 +67,7 @@ class Candidate:
             "parameters": self.parameters,
             "supported_by": self.supported_by,
             "reproduces_counterparty_value": self.reproduces_counterparty_value,
-            "reproduces_company_value": self.reproduces_company_value,
+            "reproduces_seller_value": self.reproduces_seller_value,
         }
 
 
@@ -148,7 +148,7 @@ def build_candidates(
     field: str,
     loan: LoanTerms,
     documents: list[AgreementDocument],
-    company_value: Decimal,
+    seller_value: Decimal,
     counterparty_value: Decimal,
 ) -> list[Candidate]:
     """Candidates for `field`; empty when the field is not one the agreements govern."""
@@ -165,7 +165,7 @@ def build_candidates(
             parameters=parameters,
             supported_by=supported_by,
             reproduces_counterparty_value=value == counterparty_value,
-            reproduces_company_value=value == company_value,
+            reproduces_seller_value=value == seller_value,
         )
 
     if field == "accrued_interest":
@@ -189,7 +189,7 @@ def build_candidates(
             for a in _accruals()
         ]
         return [
-            c for c in candidates if c.reproduces_counterparty_value or c.reproduces_company_value
+            c for c in candidates if c.reproduces_counterparty_value or c.reproduces_seller_value
         ]
     return []
 

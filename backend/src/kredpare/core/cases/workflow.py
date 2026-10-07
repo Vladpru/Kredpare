@@ -43,7 +43,7 @@ class WorkflowExplanation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     cause: str
-    wrong_side: Literal["company", "counterparty", "unknown"]
+    wrong_side: Literal["seller", "counterparty", "unknown"]
     candidate_id: str = Field(
         description="Id of the candidate that reproduces the counterparty value, or empty."
     )
@@ -57,9 +57,9 @@ class WorkflowExplanation(BaseModel):
 class WorkflowBreak:
     counterparty_id: str
     field: str
-    company_value: object
+    seller_value: object
     counterparty_value: object
-    company_record: Mapping[str, object]
+    seller_record: Mapping[str, object]
     counterparty_record: Mapping[str, object]
 
 
@@ -283,6 +283,8 @@ def _reasons(
             f"candidate {explanation.candidate_id!r} does not reproduce the counterparty value"
             " with clause support"
         )
+    if explanation.wrong_side == "unknown" or explanation.proposal == "none":
+        reasons.append("no actionable proposal: wrong side or proposal is not decided")
     if not explanation.citations:
         reasons.append("no citations")
     reasons.extend(

@@ -77,14 +77,14 @@ def _accrued(loan: dict[str, object], day_count: DayCount, inclusive: bool = Fal
 
 def _brackwater_break() -> WorkflowBreak:
     loan = _loan("cp-brackwater", date(2026, 8, 31))
-    company, counterparty = _accrued(loan, DayCount.ACTUAL_365), _accrued(loan, DayCount.THIRTY_360)
-    assert company != counterparty
+    seller, counterparty = _accrued(loan, DayCount.ACTUAL_365), _accrued(loan, DayCount.THIRTY_360)
+    assert seller != counterparty
     return WorkflowBreak(
         "cp-brackwater",
         "accrued_interest",
-        company,
+        seller,
         counterparty,
-        {**loan, "accrued_interest": company},
+        {**loan, "accrued_interest": seller},
         {"loan_id": loan["loan_id"], "accrued_interest": counterparty},
     )
 
@@ -103,15 +103,15 @@ def _quillmont_price_break() -> WorkflowBreak:
 
 def _quillmont_inclusive_break() -> WorkflowBreak:
     loan = _loan("cp-quillmont", date(2026, 9, 2), tier="A")
-    company = _accrued(loan, DayCount.ACTUAL_365)
+    seller = _accrued(loan, DayCount.ACTUAL_365)
     counterparty = _accrued(loan, DayCount.ACTUAL_365, inclusive=True)
-    assert company != counterparty
+    assert seller != counterparty
     return WorkflowBreak(
         "cp-quillmont",
         "accrued_interest",
-        company,
+        seller,
         counterparty,
-        {**loan, "accrued_interest": company},
+        {**loan, "accrued_interest": seller},
         {"loan_id": loan["loan_id"], "accrued_interest": counterparty},
     )
 
@@ -187,7 +187,7 @@ def test_field_without_candidates_makes_no_call() -> None:
         "settlement_date",
         date(2026, 8, 31),
         date(2026, 8, 29),
-        brk.company_record,
+        brk.seller_record,
         {},
     )
     llm = FakeLLM(_explanation())
@@ -218,6 +218,13 @@ def test_low_confidence_needs_investigation_and_threshold_is_configurable() -> N
     assert _run(_brackwater_break(), llm, threshold=0.5).status is WorkflowStatus.EXPLAINED
 
 
+def test_explanation_without_wrong_side_or_proposal_is_not_actionable() -> None:
+    for changes in ({"wrong_side": "unknown"}, {"proposal": "none"}):
+        result = _run(_brackwater_break(), FakeLLM(_explanation(**changes)))
+
+        assert result.status is WorkflowStatus.NEEDS_INVESTIGATION
+
+
 def test_unknown_cause_needs_investigation() -> None:
     result = _run(_brackwater_break(), FakeLLM(_explanation(cause="unknown")))
 
@@ -243,9 +250,9 @@ def test_prompt_injection_in_a_file_value_stays_inside_the_data_delimiters() -> 
     brk = WorkflowBreak(
         brk.counterparty_id,
         brk.field,
-        brk.company_value,
+        brk.seller_value,
         brk.counterparty_value,
-        brk.company_record,
+        brk.seller_record,
         {**brk.counterparty_record, "dealer_name": attack},
     )
     llm = FakeLLM(_explanation())

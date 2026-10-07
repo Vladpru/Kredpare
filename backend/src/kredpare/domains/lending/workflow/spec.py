@@ -48,7 +48,7 @@ class LendingWorkflowSpec:
     ) -> Sequence[Mapping[str, Any]]:
         if brk.field not in CANDIDATE_FIELDS:
             return []
-        record = brk.company_record
+        record = brk.seller_record
         loan = LoanTerms(
             upb=Decimal(str(record["upb"])),
             note_rate=Decimal(str(record["note_rate"])),
@@ -61,7 +61,7 @@ class LendingWorkflowSpec:
             brk.field,
             loan,
             _agreements(brk.counterparty_id, documents),
-            Decimal(str(brk.company_value)),
+            Decimal(str(brk.seller_value)),
             Decimal(str(brk.counterparty_value)),
         )
         return [c.to_json() for c in candidates]

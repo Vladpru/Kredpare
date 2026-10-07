@@ -37,10 +37,10 @@ def _by_id(candidates: list[Candidate]) -> dict[str, Candidate]:
 
 def test_accrued_interest_candidates_cover_every_parameter_combination() -> None:
     docs = load_agreements("cp-brackwater")
-    company, counterparty = _accrued(DayCount.ACTUAL_365), _accrued(DayCount.THIRTY_360)
-    assert company != counterparty
+    seller, counterparty = _accrued(DayCount.ACTUAL_365), _accrued(DayCount.THIRTY_360)
+    assert seller != counterparty
 
-    candidates = build_candidates("accrued_interest", LOAN, docs, company, counterparty)
+    candidates = build_candidates("accrued_interest", LOAN, docs, seller, counterparty)
 
     assert len(candidates) == 2 * 2 * 2 * 2
     assert len({c.id for c in candidates}) == 16
@@ -48,8 +48,8 @@ def test_accrued_interest_candidates_cover_every_parameter_combination() -> None
     old = by_id["30/360|end_exclusive|from_funding|half_up"]
     new = by_id["actual/365|end_exclusive|from_funding|half_up"]
     assert old.value == counterparty and old.reproduces_counterparty_value
-    assert not old.reproduces_company_value
-    assert new.value == company and new.reproduces_company_value
+    assert not old.reproduces_seller_value
+    assert new.value == seller and new.reproduces_seller_value
     assert old.parameters == {
         "day_count": "30/360",
         "end": "exclusive",
@@ -93,16 +93,16 @@ def test_parameters_no_agreement_allows_have_no_clause_support() -> None:
 
 def test_price_pct_candidates_one_per_grid_version_with_source() -> None:
     docs = load_agreements("cp-quillmont")
-    company, counterparty = Decimal("1.0100"), Decimal("1.0150")
+    seller, counterparty = Decimal("1.0100"), Decimal("1.0150")
 
-    candidates = build_candidates("price_pct", LOAN, docs, company, counterparty)
+    candidates = build_candidates("price_pct", LOAN, docs, seller, counterparty)
 
     by_id = _by_id(candidates)
     assert set(by_id) == {"grid:base §4.1", "grid:amendment-2 §4.1"}
     old, new = by_id["grid:base §4.1"], by_id["grid:amendment-2 §4.1"]
     assert (old.value, new.value) == (Decimal("1.0150"), Decimal("1.0100"))
-    assert old.reproduces_counterparty_value and not old.reproduces_company_value
-    assert new.reproduces_company_value and not new.reproduces_counterparty_value
+    assert old.reproduces_counterparty_value and not old.reproduces_seller_value
+    assert new.reproduces_seller_value and not new.reproduces_counterparty_value
     assert new.supported_by == ["amendment-2 §4.1"]
     assert new.parameters["grid_effective_date"] == "2026-09-01"
     assert new.parameters["credit_tier"] == "B"
@@ -111,13 +111,13 @@ def test_price_pct_candidates_one_per_grid_version_with_source() -> None:
 def test_purchase_price_candidates_keep_only_those_reproducing_a_value() -> None:
     docs = load_agreements("cp-quillmont")
     accrued = _accrued(DayCount.ACTUAL_365)
-    company = purchase_price(LOAN.upb, Decimal("1.0100"), accrued)
+    seller = purchase_price(LOAN.upb, Decimal("1.0100"), accrued)
     counterparty = purchase_price(LOAN.upb, Decimal("1.0150"), accrued)
 
-    candidates = build_candidates("purchase_price", LOAN, docs, company, counterparty)
+    candidates = build_candidates("purchase_price", LOAN, docs, seller, counterparty)
 
     assert candidates
-    assert all(c.reproduces_company_value or c.reproduces_counterparty_value for c in candidates)
+    assert all(c.reproduces_seller_value or c.reproduces_counterparty_value for c in candidates)
     old = [
         c
         for c in candidates
@@ -134,9 +134,9 @@ def test_purchase_price_candidates_keep_only_those_reproducing_a_value() -> None
 def test_inclusive_end_candidate_reproduces_value_but_has_no_clause() -> None:
     docs = load_agreements("cp-quillmont")
     counterparty = _accrued(DayCount.ACTUAL_365, end_inclusive=True)
-    company = _accrued(DayCount.ACTUAL_365)
+    seller = _accrued(DayCount.ACTUAL_365)
 
-    candidates = build_candidates("accrued_interest", LOAN, docs, company, counterparty)
+    candidates = build_candidates("accrued_interest", LOAN, docs, seller, counterparty)
 
     reproducing = [c for c in candidates if c.reproduces_counterparty_value]
     assert reproducing
