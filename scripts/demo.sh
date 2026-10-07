@@ -24,7 +24,10 @@ print(base.set(database=name).render_as_string(hide_password=False))
 export DATABASE_URL
 
 uv run --directory backend alembic upgrade head
-uv run kredpare-datagen --seed 42 --days 30 --out "$DATA_DIR"
+# Seed 42 is deterministic, so an existing dataset is reused; re-ingest is idempotent.
+if [ ! -f "$DATA_DIR/manifest.jsonl" ]; then
+  uv run kredpare-datagen --seed 42 --days 30 --out "$DATA_DIR"
+fi
 uv run kredpare ingest "$DATA_DIR"
 uv run kredpare match --as-of "$AS_OF"
 uv run kredpare explain
