@@ -11,7 +11,7 @@
     "gen:api": "uv run --directory ../backend python -c \"import json; from kredpare.core.api.app import app; print(json.dumps(app.openapi()))\" | openapi-typescript -o src/lib/api-schema.ts"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.49.0",
